@@ -25,6 +25,7 @@ class MarketGame {
   boolean MORN_TALK, GAMESTART, COUNTED, INTRO, RECEIVED_EARNINGS;
   Boss b;
   Button start, option, exit;
+  Notes notepad;
   MarketGame() {
     CURRENT_SCREEN = 0;
     DAY = 1;
@@ -47,6 +48,7 @@ class MarketGame {
     start = new Button("Start", new PVector(width/7, height*.5), 150, 70, 0);
     option = new Button("Options", new PVector(width/10, height*.6), 180, 180, 180);
     exit = new Button("Exit", new PVector(width/7, height*.7), 0, 150, 0);
+    notepad = new Notes();
   }
   private void addStrings() {
     textStrings.set("Boss1", "\"Welcome, new employee.\"");
@@ -104,6 +106,10 @@ class MarketGame {
   private void MarketScreen() {
     background(bg3);
     drawUI();
+    notepad.display();
+    if(GAMESTART) {
+      
+    }
   }
   private void LoadingScreen() {
     background(bg1);
@@ -137,9 +143,12 @@ class MarketGame {
       
     //Input keys for Play Screen
     if(CURRENT_SCREEN == 4 && keyCode == 39) {
-      CURRENT_SCREEN = 3;
       TEXTSTRING = b.DAY_NUM + 1;
-    } 
+      CURRENT_SCREEN = 3;
+    }
+    else if(CURRENT_SCREEN == 4 && keyCode == 32) {
+      notepad.openClose();
+    }
     
     //Input keys for Loading Screen
     if(CURRENT_SCREEN == 5 && keyCode == 32) {
@@ -199,8 +208,33 @@ class MarketGame {
 }
 //-------------------------------------------------------------------------------------------------//
 class Notes{
-  String name;
-  
+  PImage note;
+  PVector loc;
+  boolean OPEN_UP;
+  Notes() {
+    //800,600
+    note = loadImage("notepad.jpg");
+    loc = new PVector(width/2, height/2);
+    OPEN_UP = false;
+  }
+  void display() {
+    if(!OPEN_UP) {
+      fill(10,150);
+      rect(0,0,width,height);
+      imageMode(CENTER);
+      image(note,loc.x, loc.y);
+      imageMode(CORNER);
+    }
+    else {
+      fill(100,100,0);
+      rect(width- 50, 10, 20, 30);
+    }
+  }
+  void openClose() {
+    if(!OPEN_UP)
+      OPEN_UP = true;
+    else OPEN_UP = false;
+  }
 }
 //-------------------------------------------------------------------------------------------------//
 //Time is money
