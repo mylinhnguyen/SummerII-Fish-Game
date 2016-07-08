@@ -22,13 +22,14 @@ class MarketGame {
   StringDict textStrings;
   PFont regular, regular_italic, regular_bold, bornaddict;
   PImage bg, bg1, bg2, bg3, bg4, bg5;
-  boolean MORN_TALK, GAMESTART, COUNTED, INTRO;
+  boolean MORN_TALK, GAMESTART, COUNTED, INTRO, RECEIVED_EARNINGS;
   Boss b;
   Button start, option, exit;
   MarketGame() {
-    CURRENT_SCREEN = DAY = 0;
+    CURRENT_SCREEN = 0;
+    DAY = 1;
     TEXTSTRING = 1;
-    MORN_TALK = GAMESTART = COUNTED = false;
+    RECEIVED_EARNINGS = MORN_TALK = GAMESTART = COUNTED = false;
     INTRO = true;
     textStrings = new StringDict();
     addStrings();
@@ -43,22 +44,24 @@ class MarketGame {
     //bg4 = loadImage("background4.jpg");
     bg5 = loadImage("background5.jpg");
     b = new Boss("Soosh-E");
-    start = new Button("Start", new PVector(width/9, height*.5), 150, 70, 0);
-    option = new Button("Options", new PVector(width/9, height*.6), 180, 180, 180);
-    exit = new Button("Exit", new PVector(width/9, height*.7), 0, 150, 0);
+    start = new Button("Start", new PVector(width/7, height*.5), 150, 70, 0);
+    option = new Button("Options", new PVector(width/10, height*.6), 180, 180, 180);
+    exit = new Button("Exit", new PVector(width/7, height*.7), 0, 150, 0);
   }
   private void addStrings() {
     textStrings.set("Boss1", "\"Welcome, new employee.\"");
     textStrings.set("Boss2", "\"No need for introductions - time to get straight to work.\"");
     textStrings.set("Boss3", "\"Your job is to buy fish for the shop. Here's some money to use. Don't spend it all.\"");
-    textStrings.set("Boss4", "\" Good morning, employee. Sleep well?\"");
-    textStrings.set("Boss5", "\"You have a busy day at the market today - like every day for the rest of your time here.\"");
-    textStrings.set("Boss6", "\"... Well? Get going. The fish aren't going to buy themselves. (Although that would save a lot of money)\"");
-    textStrings.set("Boss7", "\"Time is money. Go.\"");
-    textStrings.set("Boss8", "\"Welcome back. Did you get what I wanted?\"");
-    textStrings.set("Boss9", "\"There better still be cash on you or else if comes out of your paycheck.\"");
-    textStrings.set("Boss10","\"See you tomorrow.\"");
-    textStrings.set("Money", "Recieved ");
+    textStrings.set("Boss4", "Received ");
+    textStrings.set("Boss5", "\" Good morning, employee. Sleep well?\"");
+    textStrings.set("Boss6", "\"You have a busy day at the market today - like every day for the rest of your time here.\"");
+    textStrings.set("Boss7", "\"... Well? Get going. The fish aren't going to buy themselves. (Although that would save a lot of money)\"");
+    textStrings.set("Boss8", "\"Time is money. Go.\"");
+    textStrings.set("Boss9", "\"Wait. Before you go, here's what you can spend with what the restaurant earned yesterday.\"");
+    textStrings.set("Boss10","Received ");
+    textStrings.set("Boss11", "\"Welcome back. Did you get what I wanted?\"");
+    textStrings.set("Boss12", "\"There better still be cash on you or else if comes out of your paycheck.\"");
+    textStrings.set("Boss13","\"See you tomorrow.\"");
     textStrings.set("Give", "Handed fish over.");
     textStrings.set("Buyer1", "\"Haven't seen you around before. Are you new?\"");
     textStrings.set("Buyer2", "\"I'm not worried about some newbie. Good luck trying to beat me in the auction.\"");
@@ -100,6 +103,7 @@ class MarketGame {
   }
   private void MarketScreen() {
     background(bg3);
+    drawUI();
   }
   private void LoadingScreen() {
     background(bg1);
@@ -108,10 +112,7 @@ class MarketGame {
     //moon going down and sun coming up animation  
   }
   //Backspace 8, Enter 13, Spacebar 32, Left 37, Up 38, Right 39, Down 40
-  void inputKey() {
-    if(keyCode == 8 && CURRENT_SCREEN > 0) CURRENT_SCREEN-=1;
-    else if(keyCode == 8 && CURRENT_SCREEN == 0) CURRENT_SCREEN = 4;
-    
+  void inputKey() {    
     //Input keys for Boss Screen
     if(CURRENT_SCREEN == 3 && keyCode == 32) 
       if(b.LEAVE) CURRENT_SCREEN = 5;
@@ -119,7 +120,11 @@ class MarketGame {
       if(!MORN_TALK) {
         if((INTRO && TEXTSTRING < b.INTRO_NUM) || (!INTRO && TEXTSTRING < b.DAY_NUM)) 
           TEXTSTRING++;
-        else {
+        else if(!RECEIVED_EARNINGS && ((INTRO && TEXTSTRING == b.INTRO_NUM) || TEXTSTRING == b.DAY_NUM)) {
+          b.comp.balance += b.comp.earnings;
+          RECEIVED_EARNINGS = true;
+        }
+        else{
           MORN_TALK = true;
           CURRENT_SCREEN = 4;
         }
@@ -151,22 +156,26 @@ class MarketGame {
       CURRENT_SCREEN = 1;
     else if(CURRENT_SCREEN == 0 && exit.mouseOver())
       exit();
-    /*used for testing
-    if(CURRENT_SCREEN < 4)
-      CURRENT_SCREEN+=1;
-    else CURRENT_SCREEN = 0;
-    */
   }
   private void displayText() {
     fill(10);
-    textFont(regular);
-    text(textStrings.get("Boss" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
+    if(TEXTSTRING == b.INTRO_NUM || TEXTSTRING == b.DAY_NUM) {
+      textFont(regular_bold);
+      text(textStrings.get("Boss" + TEXTSTRING) + b.comp.earnings + " yen", 50, height*.8, width - 50, height*.2);
+    }
+    else {
+      textFont(regular);
+      text(textStrings.get("Boss" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
+    }
   }
   private void drawUI() {
     textFont(bornaddict);
-    textSize(30);
+    textSize(25);
     fill(240);
-    text("Day " + DAY, 50, height*.04);
+    textAlign(LEFT);
+    text("Day " + DAY, 5, height*.04);
+    text("Money " + b.comp.balance, 5, height*.08);
+    textAlign(CENTER);
     fill(240,240,240);
     noStroke();
     rect(0, height*.75, width, height*.25); 
@@ -183,22 +192,28 @@ class MarketGame {
   private void nextDay() {
     DAY++;
     if(INTRO) INTRO = false;
-    b.LEAVE = MORN_TALK = false;
+    RECEIVED_EARNINGS = b.LEAVE = MORN_TALK = false;
     TEXTSTRING = b.INTRO_NUM + 1;
     CURRENT_SCREEN = 3;
   }
 }
 //-------------------------------------------------------------------------------------------------//
+class Notes{
+  String name;
+  
+}
+//-------------------------------------------------------------------------------------------------//
 //Time is money
 class Company{
   String name;
-  int balance;
+  int balance, earnings;
   float tuna_amount;
   
   Company(String n) {
     name = n; 
-    balance = 10000;
+    balance = 0;
     tuna_amount = 0;
+    earnings = 10000;
   }
   //get rid of old tuna and replace it with freshly bought one
   void restock(float more_tuna) {
@@ -219,7 +234,7 @@ class Person{
   }
   void fixTransparency() {
     for(int i = 0; i < img.width * img.height; i++) {
-      if((img.pixels[i] & 0x00FFFFFF) >= 0x00F9F9F9)
+      if((img.pixels[i] & 0x00FFFFFF) >= 0x00FAFAFA)
         img.pixels[i] = 0;
     }
     img.format = ARGB;
@@ -250,38 +265,15 @@ class Boss extends Person{
     img = loadImage("newboss.jpg");
     img.resize(450,600);
     LOCX = -img.width;
-    DIALOGUE_NUM = 10;
-    INTRO_NUM = 3;
-    DAY_NUM = 7;
-    AFTER_NUM = 10;
+    DIALOGUE_NUM = 13;
+    INTRO_NUM = 4;
+    DAY_NUM = 10;
+    AFTER_NUM = 13;
     LEAVE = false;
     INTRO = true;
     comp = new Company(n);
     fixTransparency();
   }
-  /*
-  private void fixTransparency() {
-    for(int i = 0; i < img.width * img.height; i++) {
-      if((img.pixels[i] & 0x00FFFFFF) >= 0x00F9F9F9)
-        img.pixels[i] = 0;
-    }
-    img.format = ARGB;
-    img.updatePixels(); 
-  }
-  void move() {
-    if(!LEAVE) {
-      if(LOCX < width/3) 
-        LOCX+=12;
-    }
-    else {
-      if(LOCX > -img.width)
-        LOCX-=12;
-    }
-  }
-  void draw() {
-    image(img, LOCX, 10);
-  }
-  */
 }
 //-------------------------------------------------------------------------------------------------//
 //Would you press the button
