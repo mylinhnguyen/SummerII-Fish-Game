@@ -6,7 +6,7 @@ void setup() {
 }
 
 void draw() {
-  mg.draw();
+  mg.play();
 }
 
 void keyPressed() {
@@ -21,7 +21,7 @@ class MarketGame {
   IntList correctKeys, userInput;
   StringDict textStrings;
   PFont regular, regular_italic, regular_bold, bornaddict;
-  PImage bg1, bg2, bg3, bg4, bg5;
+  PImage bg, bg1, bg2, bg3, bg4, bg5;
   boolean MORN_TALK, GAMESTART, COUNTED, INTRO;
   Boss b;
   Button start, option, exit;
@@ -36,12 +36,16 @@ class MarketGame {
     regular_italic = createFont("ARIALI.TTF", 25);
     regular_bold = createFont("ARIBLK.TTF", 25);
     bornaddict = createFont("BornAddict.ttf", 20);
-    bg1 = loadImage("newbackground.jpg");
+    bg = loadImage("newbackground.jpg");
+    bg1 = loadImage("background1.jpg");
     bg2 = loadImage("background2.jpg");
     bg3 = loadImage("background3.jpg");
     //bg4 = loadImage("background4.jpg");
-    //bg5 = loadImage("background5.jpg");
-    b = new Boss();
+    bg5 = loadImage("background5.jpg");
+    b = new Boss("Soosh-E");
+    start = new Button("Start", new PVector(width/9, height*.5), 150, 70, 0);
+    option = new Button("Options", new PVector(width/9, height*.6), 180, 180, 180);
+    exit = new Button("Exit", new PVector(width/9, height*.7), 0, 150, 0);
   }
   private void addStrings() {
     textStrings.set("Boss1", "\"Welcome, new employee.\"");
@@ -54,39 +58,54 @@ class MarketGame {
     textStrings.set("Boss8", "\"Welcome back. Did you get what I wanted?\"");
     textStrings.set("Boss9", "\"There better still be cash on you or else if comes out of your paycheck.\"");
     textStrings.set("Boss10","\"See you tomorrow.\"");
+    textStrings.set("Money", "Recieved ");
+    textStrings.set("Give", "Handed fish over.");
+    textStrings.set("Buyer1", "\"Haven't seen you around before. Are you new?\"");
+    textStrings.set("Buyer2", "\"I'm not worried about some newbie. Good luck trying to beat me in the auction.\"");
   }
-  void draw() {
-    //Start Screen
-    if(CURRENT_SCREEN == 0) {
-      background(bg1);
+  void play() {
+    if(CURRENT_SCREEN == 0)
+      StartScreen();
+    else if(CURRENT_SCREEN == 1) 
+      OptionScreen();
+    else if(CURRENT_SCREEN == 2) 
+      LoadingScreen();
+    else if(CURRENT_SCREEN == 3)
+      BossScreen();
+    else if(CURRENT_SCREEN == 4) 
+      MarketScreen();
+    else if(CURRENT_SCREEN == 5) 
+      ANewDayScreen();
+    else {
+      println("ERROR LOADING SCREEN");
+      exit();
     }
-    //Settings/Options/Info Screen
-    else if(CURRENT_SCREEN == 1) {
-      background(50);
-    }
-    //Loading Screen
-    else if(CURRENT_SCREEN == 2) {
-      background(100);
-    }
-    //Boss Screen
-    else if(CURRENT_SCREEN == 3) {
-      background(bg2);
-      b.move();
-      b.draw();
-      drawUI();
-      drawContinue();
-      displayText();
-    }
-    //Play Screen
-    else if(CURRENT_SCREEN == 4) {
-      background(bg3);
-    }
-    else if(CURRENT_SCREEN == 5) {
-      background(250);
-      fill(10);
-      text("Loading...", 50,50);
-    }
-    else println("ERROR LOADING SCREEN");
+  }
+  private void StartScreen() {
+    background(bg);
+    start.draw();
+    option.draw();
+    exit.draw();
+  }
+  private void OptionScreen() {
+    background(bg5);
+  }
+  private void BossScreen() {
+    background(bg2);
+    b.move();
+    b.draw();
+    drawUI();
+    drawContinue();
+    displayText();
+  }
+  private void MarketScreen() {
+    background(bg3);
+  }
+  private void LoadingScreen() {
+    background(bg1);
+  }
+  private void ANewDayScreen() {
+    //moon going down and sun coming up animation  
   }
   //Backspace 8, Enter 13, Spacebar 32, Left 37, Up 38, Right 39, Down 40
   void inputKey() {
@@ -95,7 +114,7 @@ class MarketGame {
     
     //Input keys for Boss Screen
     if(CURRENT_SCREEN == 3 && keyCode == 32) 
-      if(b.END_OF_DAY) CURRENT_SCREEN = 5;
+      if(b.LEAVE) CURRENT_SCREEN = 5;
       
       if(!MORN_TALK) {
         if((INTRO && TEXTSTRING < b.INTRO_NUM) || (!INTRO && TEXTSTRING < b.DAY_NUM)) 
@@ -108,7 +127,7 @@ class MarketGame {
       else {
         if(TEXTSTRING < b.AFTER_NUM) 
           TEXTSTRING++;
-        else b.END_OF_DAY = true;
+        else b.LEAVE = true;
       }
       
     //Input keys for Play Screen
@@ -124,10 +143,19 @@ class MarketGame {
       CURRENT_SCREEN = 3;
     }
   }
+  //mouseClicked
   void changeScreen() {
+    if(CURRENT_SCREEN == 0 && start.mouseOver()) 
+      CURRENT_SCREEN = 3;
+    else if(CURRENT_SCREEN == 0 && option.mouseOver())
+      CURRENT_SCREEN = 1;
+    else if(CURRENT_SCREEN == 0 && exit.mouseOver())
+      exit();
+    /*used for testing
     if(CURRENT_SCREEN < 4)
       CURRENT_SCREEN+=1;
     else CURRENT_SCREEN = 0;
+    */
   }
   private void displayText() {
     fill(10);
@@ -138,7 +166,7 @@ class MarketGame {
     textFont(bornaddict);
     textSize(30);
     fill(240);
-    text("Day " + DAY, 5, height*.04);
+    text("Day " + DAY, 50, height*.04);
     fill(240,240,240);
     noStroke();
     rect(0, height*.75, width, height*.25); 
@@ -150,12 +178,12 @@ class MarketGame {
   private void drawContinue() {
     textSize(22);
     fill(10, millis() % 510);
-    text("Press SPACEBAR to continue", width*.7, height*.95);
+    text("Press SPACEBAR to continue", width*.8, height*.95);
   }
   private void nextDay() {
     DAY++;
     if(INTRO) INTRO = false;
-    b.END_OF_DAY = MORN_TALK = false;
+    b.LEAVE = MORN_TALK = false;
     TEXTSTRING = b.INTRO_NUM + 1;
     CURRENT_SCREEN = 3;
   }
@@ -167,8 +195,8 @@ class Company{
   int balance;
   float tuna_amount;
   
-  Company() {
-    name = "Soosh-E"; 
+  Company(String n) {
+    name = n; 
     balance = 10000;
     tuna_amount = 0;
   }
@@ -182,29 +210,14 @@ class Company{
   }
 }
 //-------------------------------------------------------------------------------------------------//
-//Big Boss
-class Boss{
+class Person{
   String name;
-  Float happiness;
-  int requestQuality, requestWeight, r_type, LOCX, DIALOGUE_NUM, INTRO_NUM, DAY_NUM, AFTER_NUM;
+  int LOCX, DIALOGUE_NUM, INTRO_NUM, DAY_NUM, AFTER_NUM;
   PImage img;
-  boolean END_OF_DAY;
-  Boss() {
-    name = "Boss";
-    happiness = 70.0;
-    requestQuality = abs(int(randomGaussian() * 3));
-    requestWeight = abs(int(randomGaussian() * 33));
-    img = loadImage("newboss.jpg");
-    img.resize(450,600);
-    LOCX = -img.width;
-    DIALOGUE_NUM = 10;
-    INTRO_NUM = 3;
-    DAY_NUM = 7;
-    AFTER_NUM = 10;
-    END_OF_DAY = false;
-    fixTransparency();
+  boolean LEAVE, INTRO;
+  Person() {    
   }
-  private void fixTransparency() {
+  void fixTransparency() {
     for(int i = 0; i < img.width * img.height; i++) {
       if((img.pixels[i] & 0x00FFFFFF) >= 0x00F9F9F9)
         img.pixels[i] = 0;
@@ -213,7 +226,7 @@ class Boss{
     img.updatePixels(); 
   }
   void move() {
-    if(!END_OF_DAY) {
+    if(!LEAVE) {
       if(LOCX < width/3) 
         LOCX+=12;
     }
@@ -225,23 +238,50 @@ class Boss{
   void draw() {
     image(img, LOCX, 10);
   }
-  //changes boss's happiness based on fish bought/cpd
-  void reaction() {
-    
+}
+//-------------------------------------------------------------------------------------------------//
+//Big Boss
+class Boss extends Person{
+  Float happiness;
+  Company comp;
+  Boss(String n) {
+    name = "Boss";
+    happiness = 70.0;
+    img = loadImage("newboss.jpg");
+    img.resize(450,600);
+    LOCX = -img.width;
+    DIALOGUE_NUM = 10;
+    INTRO_NUM = 3;
+    DAY_NUM = 7;
+    AFTER_NUM = 10;
+    LEAVE = false;
+    INTRO = true;
+    comp = new Company(n);
+    fixTransparency();
   }
-  //once a day, the boss will request a certain requirement e.g. at least 3star quality tuna
-  //fulfilling request will greatly boost boss's happiness and increase the amount of money you can spend
-  private int request() {
-    r_type = int(random(0,1));
-    if(r_type == 0) {
-      requestQuality = abs(int(randomGaussian() * 3));
-      return requestQuality;
+  /*
+  private void fixTransparency() {
+    for(int i = 0; i < img.width * img.height; i++) {
+      if((img.pixels[i] & 0x00FFFFFF) >= 0x00F9F9F9)
+        img.pixels[i] = 0;
+    }
+    img.format = ARGB;
+    img.updatePixels(); 
+  }
+  void move() {
+    if(!LEAVE) {
+      if(LOCX < width/3) 
+        LOCX+=12;
     }
     else {
-      requestWeight = abs(int(randomGaussian() * 33));
-      return requestWeight;
+      if(LOCX > -img.width)
+        LOCX-=12;
     }
   }
+  void draw() {
+    image(img, LOCX, 10);
+  }
+  */
 }
 //-------------------------------------------------------------------------------------------------//
 //Would you press the button
@@ -249,23 +289,21 @@ class Button{
   String text;
   PVector location;
   color col,over;
-  
+  PFont pf;
   Button(String t, PVector l, int r, int g, int b) {
     text = t;
     location = l;
     col = color(r,g,b);
     over = color(r+100,g+100,b+100);
+    pf = createFont("BornAddict.ttf", 25);
   }
   void draw() {
     if(mouseX >= location.x && mouseX <= location.x + 100 
-    && mouseY >= location.y-20 && mouseY <= location.y + 20) {
+    && mouseY >= location.y-20 && mouseY <= location.y + 20)
       fill(over);
-      stroke(50);
-    }
-    else {
+    else
       fill(col);
-      stroke(10);
-    }
+    stroke(col);
     strokeWeight(4);
     beginShape();
       vertex(location.x,location.y);//1         vertex(86,115);//1
@@ -285,9 +323,9 @@ class Button{
       vertex(location.x+42,location.y+24);//9   vertex(128,139);//9
       vertex(location.x+2,location.y+5);//10    vertex(88,120);//10
     endShape(CLOSE);
-    textSize(25);
     textAlign(CENTER);
     fill(250);
+    textFont(pf);
     text(text, location.x+65, location.y+8);
   }
   boolean mouseOver() {
