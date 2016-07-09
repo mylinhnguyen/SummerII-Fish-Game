@@ -18,18 +18,24 @@ void mouseClicked() {
 //-------------------------------------------------------------------------------------------------//
 class MarketGame {
   int CURRENT_SCREEN, DAY, TEXTSTRING;
-  IntList correctKeys, userInput;
+  IntList userInput;
+  StringList combos;
   StringDict textStrings;
   PFont regular, regular_italic, regular_bold, bornaddict;
   PImage bg, bg1, bg2, bg3, bg4, bg5;
   boolean MORN_TALK, GAMESTART, COUNTED, INTRO, RECEIVED_EARNINGS;
+  int[] keyBindings = {37,38,39,40};
   Boss b;
   Button start, option, exit;
   Notes notepad;
+  Auction auction;
   MarketGame() {
     CURRENT_SCREEN = 0;
     DAY = 1;
     TEXTSTRING = 1;
+    userInput = new IntList();
+    combos = new StringList();
+    addCombos();
     RECEIVED_EARNINGS = MORN_TALK = GAMESTART = COUNTED = false;
     INTRO = true;
     textStrings = new StringDict();
@@ -49,6 +55,7 @@ class MarketGame {
     option = new Button("Options", new PVector(width/10, height*.6), 180, 180, 180);
     exit = new Button("Exit", new PVector(width/7, height*.7), 0, 150, 0);
     notepad = new Notes();
+    auction = new Auction();
   }
   private void addStrings() {
     textStrings.set("Boss1", "\"Welcome, new employee.\"");
@@ -67,6 +74,20 @@ class MarketGame {
     textStrings.set("Give", "Handed fish over.");
     textStrings.set("Buyer1", "\"Haven't seen you around before. Are you new?\"");
     textStrings.set("Buyer2", "\"I'm not worried about some newbie. Good luck trying to beat me in the auction.\"");
+    textStrings.set("Buyer3", "\"Back again? Some people never learn.\"");
+    textStrings.set("Buyer4", "\"I will be buying the best tuna here today so you can leave now.\"");
+  }
+  private void addCombos() {
+    combos.append("0"); 
+    combos.append("37");
+    combos.append("38");
+    combos.append("39");
+    combos.append("40 40");
+    combos.append("40 37");
+    combos.append("40 39");
+    combos.append("39 37 39");
+    combos.append("39 38 37 38");
+    combos.append("37 39 39 38");
   }
   void play() {
     if(CURRENT_SCREEN == 0)
@@ -94,6 +115,7 @@ class MarketGame {
   }
   private void OptionScreen() {
     background(bg5);
+    //will probably add story here too - what your goal is
   }
   private void BossScreen() {
     background(bg2);
@@ -108,7 +130,7 @@ class MarketGame {
     drawUI();
     notepad.display();
     if(GAMESTART) {
-      
+      auction.display();
     }
   }
   private void LoadingScreen() {
@@ -121,7 +143,7 @@ class MarketGame {
   void inputKey() {    
     //Input keys for Boss Screen
     if(CURRENT_SCREEN == 3 && keyCode == 32) 
-      if(b.LEAVE) CURRENT_SCREEN = 5;
+      if(b.LEAVE) CURRENT_SCREEN = 2;
       
       if(!MORN_TALK) {
         if((INTRO && TEXTSTRING < b.INTRO_NUM) || (!INTRO && TEXTSTRING < b.DAY_NUM)) 
@@ -142,16 +164,22 @@ class MarketGame {
       }
       
     //Input keys for Play Screen
-    if(CURRENT_SCREEN == 4 && keyCode == 39) {
+    if(CURRENT_SCREEN == 4 && keyCode == 39 && !GAMESTART) {
       TEXTSTRING = b.DAY_NUM + 1;
       CURRENT_SCREEN = 3;
     }
-    else if(CURRENT_SCREEN == 4 && keyCode == 32) {
+    else if(CURRENT_SCREEN == 4 && keyCode == 32 && !GAMESTART) {
       notepad.openClose();
+    }
+    else if(CURRENT_SCREEN == 4 && keyCode == 37 && !GAMESTART)
+      GAMESTART = true;
+    else if(CURRENT_SCREEN == 4 && GAMESTART) {
+      userInput.append(keyCode);
+      println(userInput);
     }
     
     //Input keys for Loading Screen
-    if(CURRENT_SCREEN == 5 && keyCode == 32) {
+    if(CURRENT_SCREEN == 2 && keyCode == 39) {
       //reset stuff here
       nextDay();
       CURRENT_SCREEN = 3;
@@ -204,6 +232,43 @@ class MarketGame {
     RECEIVED_EARNINGS = b.LEAVE = MORN_TALK = false;
     TEXTSTRING = b.INTRO_NUM + 1;
     CURRENT_SCREEN = 3;
+  }
+}
+//-------------------------------------------------------------------------------------------------//
+class Auction{
+  int YOUR_BID, BUYER_BID, HIGHEST_BID;
+  Auction() {
+    HIGHEST_BID = YOUR_BID = BUYER_BID = 0;
+  }
+  void display() {
+    rectMode(CORNER);
+    fill(10,150);
+    rect(0, 0, width, height);
+    fill(240);
+    rectMode(CENTER);
+    rect(width*.2, height*.45, 200, 40);
+    rect(width*.8, height*.45, 200, 40);
+    rect(width*.5, height*.1, 300, 50);
+    rectMode(CORNER);
+    textSize(30);
+    textAlign(CENTER);
+    fill(10);
+    text(YOUR_BID, width*.2, height*.46);
+    text(BUYER_BID, width*.8, height*.46);
+    fill(240);
+    text("Your bid", width*.2, height*.4);
+    text("Rival bid", width*.8, height*.4);
+    textSize(35);
+    text("Highest bid", width*.5, height*.05); 
+    textAlign(LEFT);
+  }
+  void updateYB(int yb) {
+    YOUR_BID = yb;
+    if(YOUR_BID > BUYER_BID) HIGHEST_BID = YOUR_BID;
+  }
+  void updateBB(int bb) {
+    BUYER_BID = bb;
+    if(BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
   }
 }
 //-------------------------------------------------------------------------------------------------//
