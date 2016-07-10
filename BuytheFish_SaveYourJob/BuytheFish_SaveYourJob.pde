@@ -140,6 +140,7 @@ class MarketGame {
     //moon going down and sun coming up animation  
   }
   //Backspace 8, Enter 13, Spacebar 32, Left 37, Up 38, Right 39, Down 40
+  //Probably could make this simpler...
   void inputKey() {    
     //Input keys for Boss Screen
     if(CURRENT_SCREEN == 3 && keyCode == 32) 
@@ -178,17 +179,32 @@ class MarketGame {
       userInput.append(keyCode);
       println(userInput);
     }
+    //where user inputs first number
+    else if(CURRENT_SCREEN == 4 && GAMESTART && ALLOW_INPUTS && keyCode == 32) {
+      auction.compareInput(userInput, combos);
+      clearInputs();
+    }
+    //where user inputs second number
     else if(CURRENT_SCREEN == 4 && GAMESTART && ALLOW_INPUTS && keyCode == 10) {
       auction.compareInput(userInput, combos);
       clearInputs();
       ALLOW_INPUTS = false;
+      if(auction.WRONG_INPUT) {
+        //make this tuna not bidable anymore, LOOK_AT = true;
+        //user must try another fish
+        GAMESTART = false;
+        println("Minigame lost");
+      }
       //call method for AI
+      auction.bid();
+      ALLOW_INPUTS = true;
     }
     else if(CURRENT_SCREEN == 4 && !GAMESTART && !ALLOW_INPUTS && keyCode == 32) {
       TEXTSTRING = b.DAY_NUM + 1;
       GAMESTART = false;
       CURRENT_SCREEN = 3;
     }
+    
     //Input keys for Loading Screen
     if(CURRENT_SCREEN == 2 && keyCode == 39) {
       //reset MarketGame stuff here
@@ -255,10 +271,12 @@ class MarketGame {
 //-------------------------------------------------------------------------------------------------//
 class Auction{
   int YOUR_BID, BUYER_BID, HIGHEST_BID, DIGIT_ONE, DIGIT_TWO;
-  boolean WRONG_INPUT;
+  boolean WRONG_INPUT, WIN;
+  Buyer buyer;
   Auction() {
     DIGIT_TWO = DIGIT_ONE = HIGHEST_BID = YOUR_BID = BUYER_BID = 0;
-    WRONG_INPUT = false;
+    WIN = WRONG_INPUT = false;
+    buyer = new Buyer();
   }
   void display() {
     rectMode(CORNER);
@@ -284,7 +302,7 @@ class Auction{
   }
   void updateBB(int bb) {
     BUYER_BID = bb;
-    if(BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
+    
   }
   void compareInput(IntList UI, StringList C) {
     println("In compareInput");
@@ -300,10 +318,8 @@ class Auction{
         DIGIT_TWO = j;
         break;
       }
-      else{
-        WRONG_INPUT = true;
-      }
     }
+    if(DIGIT_ONE == 0) WRONG_INPUT = true;
     convertInputs();
   }
   private void convertInputs() {
@@ -311,6 +327,13 @@ class Auction{
     if(YOUR_BID > BUYER_BID) HIGHEST_BID = YOUR_BID;
     else if (BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
   }
+  void bid() {
+    //calculates if buyer will bid or not
+    //if so, calculate their bid
+    //using buyer.BID_CHANCE
+    if(BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
+    else WIN = true;
+    }
 }
 //-------------------------------------------------------------------------------------------------//
 class Notes{
@@ -396,15 +419,29 @@ class Person{
 }
 //-------------------------------------------------------------------------------------------------//
 class Buyer extends Person{
+  Float BID_CHANCE;
    Buyer() {
      name = "Boyr";
-     LOCX = 0;
      DIALOGUE_NUM = 0;
      INTRO_NUM = 0;
      DAY_NUM = 0;
      LEAVE = false;
      INTRO = true;
+     img = loadImage("buyer.jpg");
+     LOCX = img.width;
+     fixTransparency();
+     BID_CHANCE = 80.0;
    }
+   void move() {
+    if(!LEAVE) {
+      if(LOCX > 2 * width/3) 
+        LOCX-=12;
+    }
+    else {
+      if(LOCX < width + img.width)
+        LOCX+=12;
+    }
+  }
 }
 //-------------------------------------------------------------------------------------------------//
 //Big Boss
