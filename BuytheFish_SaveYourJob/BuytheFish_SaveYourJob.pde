@@ -177,17 +177,23 @@ class MarketGame {
     }
     else if(CURRENT_SCREEN == 4 && GAMESTART && ALLOW_INPUTS && (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40)) {
       userInput.append(keyCode);
-      println(userInput);
     }
     //where user inputs first number
     else if(CURRENT_SCREEN == 4 && GAMESTART && ALLOW_INPUTS && keyCode == 32) {
       auction.compareInput(userInput, combos);
       clearInputs();
+      if(auction.WRONG_INPUT) {
+        //make this tuna not bidable anymore, LOOK_AT = true;
+        //user must try another fish
+        GAMESTART = false;
+        println("Minigame lost");
+      }
     }
     //where user inputs second number
     else if(CURRENT_SCREEN == 4 && GAMESTART && ALLOW_INPUTS && keyCode == 10) {
       auction.compareInput(userInput, combos);
       clearInputs();
+      auction.reset();
       ALLOW_INPUTS = false;
       if(auction.WRONG_INPUT) {
         //make this tuna not bidable anymore, LOOK_AT = true;
@@ -195,8 +201,7 @@ class MarketGame {
         GAMESTART = false;
         println("Minigame lost");
       }
-      //call method for AI
-      auction.bid();
+      auction.buyerBid();
       ALLOW_INPUTS = true;
     }
     else if(CURRENT_SCREEN == 4 && !GAMESTART && !ALLOW_INPUTS && keyCode == 32) {
@@ -255,7 +260,6 @@ class MarketGame {
   }
   private void clearInputs() {
     userInput.clear();
-    auction.DIGIT_ONE = auction.DIGIT_TWO = 0;
   }
   private void nextDay() {
     DAY++;
@@ -263,9 +267,6 @@ class MarketGame {
     RECEIVED_EARNINGS = b.LEAVE = MORN_TALK = false;
     TEXTSTRING = b.INTRO_NUM + 1;
     CURRENT_SCREEN = 3;
-  }
-  private void buyerTurn() {
-     
   }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -305,35 +306,43 @@ class Auction{
     
   }
   void compareInput(IntList UI, StringList C) {
-    println("In compareInput");
     String input = "";
     for(int i = 0; i < UI.size(); i++) 
       input = input + UI.get(i);
+    println(input);
     for(int j = 0; j < C.size(); j++) {
-      if(input.equals(C.get(j)) && DIGIT_ONE == 0) { 
+      if(DIGIT_ONE == 0 && input.equals(C.get(j))) { 
+        println("Digit 1 match");
         DIGIT_ONE = j;
+        YOUR_BID = DIGIT_ONE * 1000;
         break;
       }
-      else if (input.equals(C.get(j)) && DIGIT_ONE != 0 && DIGIT_ONE == 0) {
+      else if (DIGIT_ONE != 0 && input.equals(C.get(j))) {
+        println("Digit 2 match");
         DIGIT_TWO = j;
+        YOUR_BID = YOUR_BID + DIGIT_TWO * 100;
         break;
       }
     }
     if(DIGIT_ONE == 0) WRONG_INPUT = true;
+    println(DIGIT_ONE + " " + DIGIT_TWO);
     convertInputs();
   }
   private void convertInputs() {
-    YOUR_BID = (DIGIT_ONE * 1000) + (DIGIT_TWO * 100); 
+    //YOUR_BID = (DIGIT_ONE * 1000) + (DIGIT_TWO * 100); 
     if(YOUR_BID > BUYER_BID) HIGHEST_BID = YOUR_BID;
     else if (BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
   }
-  void bid() {
+  void buyerBid() {
     //calculates if buyer will bid or not
     //if so, calculate their bid
     //using buyer.BID_CHANCE
     if(BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
     else WIN = true;
     }
+  void reset() {
+    DIGIT_ONE = DIGIT_TWO = 0; 
+  }
 }
 //-------------------------------------------------------------------------------------------------//
 class Notes{
