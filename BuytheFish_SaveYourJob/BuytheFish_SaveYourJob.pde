@@ -23,7 +23,7 @@ class MarketGame {
   StringDict textStrings;
   PFont regular, regular_italic, regular_bold, bornaddict;
   PImage bg, bg1, bg2, bg3, bg4, bg5;
-  boolean MORN_TALK, GAMESTART, COUNTED, INTRO, RECEIVED_EARNINGS;
+  boolean MORN_TALK, GAMESTART, ALLOW_INPUTS, COUNTED, INTRO, RECEIVED_EARNINGS;
   int[] keyBindings = {37,38,39,40};
   Boss b;
   Button start, option, exit;
@@ -36,7 +36,7 @@ class MarketGame {
     userInput = new IntList();
     combos = new StringList();
     addCombos();
-    RECEIVED_EARNINGS = MORN_TALK = GAMESTART = COUNTED = false;
+    RECEIVED_EARNINGS = MORN_TALK = GAMESTART = ALLOW_INPUTS = COUNTED = false;
     INTRO = true;
     textStrings = new StringDict();
     addStrings();
@@ -82,12 +82,12 @@ class MarketGame {
     combos.append("37");
     combos.append("38");
     combos.append("39");
-    combos.append("40 40");
-    combos.append("40 37");
-    combos.append("40 39");
-    combos.append("39 37 39");
-    combos.append("39 38 37 38");
-    combos.append("37 39 39 38");
+    combos.append("4040");
+    combos.append("4037");
+    combos.append("4039");
+    combos.append("393739");
+    combos.append("39383738");
+    combos.append("37393938");
   }
   void play() {
     if(CURRENT_SCREEN == 0)
@@ -171,16 +171,27 @@ class MarketGame {
     else if(CURRENT_SCREEN == 4 && keyCode == 32 && !GAMESTART) {
       notepad.openClose();
     }
-    else if(CURRENT_SCREEN == 4 && keyCode == 37 && !GAMESTART)
-      GAMESTART = true;
-    else if(CURRENT_SCREEN == 4 && GAMESTART) {
+    else if(CURRENT_SCREEN == 4 && keyCode == 37 && !GAMESTART) {
+      ALLOW_INPUTS = GAMESTART = true;
+    }
+    else if(CURRENT_SCREEN == 4 && GAMESTART && ALLOW_INPUTS && (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40)) {
       userInput.append(keyCode);
       println(userInput);
     }
-    
+    else if(CURRENT_SCREEN == 4 && GAMESTART && ALLOW_INPUTS && keyCode == 10) {
+      auction.compareInput(userInput, combos);
+      clearInputs();
+      ALLOW_INPUTS = false;
+      //call method for AI
+    }
+    else if(CURRENT_SCREEN == 4 && !GAMESTART && !ALLOW_INPUTS && keyCode == 32) {
+      TEXTSTRING = b.DAY_NUM + 1;
+      GAMESTART = false;
+      CURRENT_SCREEN = 3;
+    }
     //Input keys for Loading Screen
     if(CURRENT_SCREEN == 2 && keyCode == 39) {
-      //reset stuff here
+      //reset MarketGame stuff here
       nextDay();
       CURRENT_SCREEN = 3;
     }
@@ -226,6 +237,10 @@ class MarketGame {
     fill(10, millis() % 510);
     text("Press SPACEBAR to continue", width*.8, height*.95);
   }
+  private void clearInputs() {
+    userInput.clear();
+    auction.DIGIT_ONE = auction.DIGIT_TWO = 0;
+  }
   private void nextDay() {
     DAY++;
     if(INTRO) INTRO = false;
@@ -233,12 +248,17 @@ class MarketGame {
     TEXTSTRING = b.INTRO_NUM + 1;
     CURRENT_SCREEN = 3;
   }
+  private void buyerTurn() {
+     
+  }
 }
 //-------------------------------------------------------------------------------------------------//
 class Auction{
-  int YOUR_BID, BUYER_BID, HIGHEST_BID;
+  int YOUR_BID, BUYER_BID, HIGHEST_BID, DIGIT_ONE, DIGIT_TWO;
+  boolean WRONG_INPUT;
   Auction() {
-    HIGHEST_BID = YOUR_BID = BUYER_BID = 0;
+    DIGIT_TWO = DIGIT_ONE = HIGHEST_BID = YOUR_BID = BUYER_BID = 0;
+    WRONG_INPUT = false;
   }
   void display() {
     rectMode(CORNER);
@@ -262,13 +282,34 @@ class Auction{
     text("Highest bid", width*.5, height*.05); 
     textAlign(LEFT);
   }
-  void updateYB(int yb) {
-    YOUR_BID = yb;
-    if(YOUR_BID > BUYER_BID) HIGHEST_BID = YOUR_BID;
-  }
   void updateBB(int bb) {
     BUYER_BID = bb;
     if(BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
+  }
+  void compareInput(IntList UI, StringList C) {
+    println("In compareInput");
+    String input = "";
+    for(int i = 0; i < UI.size(); i++) 
+      input = input + UI.get(i);
+    for(int j = 0; j < C.size(); j++) {
+      if(input.equals(C.get(j)) && DIGIT_ONE == 0) { 
+        DIGIT_ONE = j;
+        break;
+      }
+      else if (input.equals(C.get(j)) && DIGIT_ONE != 0 && DIGIT_ONE == 0) {
+        DIGIT_TWO = j;
+        break;
+      }
+      else{
+        WRONG_INPUT = true;
+      }
+    }
+    convertInputs();
+  }
+  private void convertInputs() {
+    YOUR_BID = (DIGIT_ONE * 1000) + (DIGIT_TWO * 100); 
+    if(YOUR_BID > BUYER_BID) HIGHEST_BID = YOUR_BID;
+    else if (BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
   }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -284,10 +325,10 @@ class Notes{
   }
   void display() {
     if(!OPEN_UP) {
-      fill(10,150);
-      rect(0,0,width,height);
+      fill(10, 150);
+      rect(0, 0, width, height);
       imageMode(CENTER);
-      image(note,loc.x, loc.y);
+      image(note, loc.x, loc.y);
       imageMode(CORNER);
     }
     else {
@@ -326,7 +367,7 @@ class Company{
 //-------------------------------------------------------------------------------------------------//
 class Person{
   String name;
-  int LOCX, DIALOGUE_NUM, INTRO_NUM, DAY_NUM, AFTER_NUM;
+  int LOCX, DIALOGUE_NUM, INTRO_NUM, DAY_NUM;
   PImage img;
   boolean LEAVE, INTRO;
   Person() {    
@@ -354,10 +395,23 @@ class Person{
   }
 }
 //-------------------------------------------------------------------------------------------------//
+class Buyer extends Person{
+   Buyer() {
+     name = "Boyr";
+     LOCX = 0;
+     DIALOGUE_NUM = 0;
+     INTRO_NUM = 0;
+     DAY_NUM = 0;
+     LEAVE = false;
+     INTRO = true;
+   }
+}
+//-------------------------------------------------------------------------------------------------//
 //Big Boss
 class Boss extends Person{
   Float happiness;
   Company comp;
+  int AFTER_NUM;
   Boss(String n) {
     name = "Boss";
     happiness = 70.0;
