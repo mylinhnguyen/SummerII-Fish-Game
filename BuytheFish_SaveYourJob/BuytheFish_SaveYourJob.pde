@@ -15,6 +15,7 @@ void mouseClicked() {
   mg.mouseInput();
 }
 //-------------------------------------------------------------------------------------------------//
+//↑ ↓ → ←
 class MarketGame {
   int CURRENT_SCREEN, DAY, TEXTSTRING, SELECTED_TUNA;
   IntList userInput;
@@ -335,14 +336,31 @@ class MarketGame {
 class Auction{
   int YOUR_BID, BUYER_BID, HIGHEST_BID, DIGIT_ONE, DIGIT_TWO;
   boolean WRONG_INPUT, WIN;
+  PImage framel, framew, door;
   Buyer buyer;
   Auction() {
     DIGIT_TWO = DIGIT_ONE = HIGHEST_BID = YOUR_BID = BUYER_BID = 0;
     WIN = WRONG_INPUT = false;
     buyer = new Buyer();
+    door = loadImage("steeldoor.jpg");
+    framel = loadImage("darkconcrete.jpg");
+    framew = loadImage("darkconcrete.jpg");
+    framel.resize(10, 270);
+    framew.resize(300, 10);
   }
   void displayIcon() {
-    rect(width - 300, 200, 150, 200); 
+    noStroke();
+    image(door, 800, 50);
+    image(framel, 800, 50);
+    image(framel, 1100, 50);
+    image(framew, 800, 50);
+    fill(240);
+    rect(700, 100, 80, 60, 4);
+    textSize(20);
+    textAlign(CENTER);
+    fill(15);
+    text("Tuna Auction", 700, 100, 80, 60); 
+    textAlign(LEFT);
   }
   void display() {
     rectMode(CORNER);
@@ -400,8 +418,8 @@ class Auction{
     DIGIT_ONE = DIGIT_TWO = 0; 
   }
   boolean mouseOver() {
-    if(mouseX >= width - 200 && mouseX <= width - 200 + 200 
-    && mouseY >= 200  && mouseY <= 200 + 300) 
+    if(mouseX > 800 && mouseX < 1100 
+    && mouseY > 50  && mouseY < 320) 
       return true;
     return false;
   }
