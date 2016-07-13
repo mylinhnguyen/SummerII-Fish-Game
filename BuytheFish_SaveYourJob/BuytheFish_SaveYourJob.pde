@@ -214,27 +214,31 @@ class MarketGame {
        else if(GAMESTART && ALLOW_INPUTS) {
          if(keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) 
            userInput.append(keyCode); 
+         //User inputs first digit
          else if(keyCode == 32) {
-           auction.compareInput(userInput, combos);
+           auction.compareInput(userInput, combos, "");
            userInput.clear();
            if(auction.WRONG_INPUT) {
              //make this tuna not bidable anymore, LOOK_AT = true;
              //user must try another fish
              GAMESTART = false;
+             tunas[SELECTED_TUNA].LOOK_AT = true;
              println("Minigame lost");
            }
          }
+         //User inputs second digit
          else if(keyCode == 10) {
-           auction.compareInput(userInput, combos);
+           auction.compareInput(userInput, combos, "Last");
            userInput.clear();
-           auction.reset();
            ALLOW_INPUTS = false;
            if(auction.WRONG_INPUT) {
             //make this tuna not bidable anymore, LOOK_AT = true;
             //user must try another fish
              GAMESTART = false;
+             tunas[SELECTED_TUNA].LOOK_AT = true;
              println("Minigame lost");
            }
+           auction.miniReset();
            auction.buyerBid();
            if(auction.WIN) {
              //user buys the fish they chose SELECTED_TUNA
@@ -270,12 +274,12 @@ class MarketGame {
     }
     if(CURRENT_SCREEN == 4) {
       if(!AT_TUNA_MARKET && !SHOW_BUYER && !auction.WIN) {
-        if(auction.mouseOver()) {
+        if(auction.mouseOver())
           SHOW_BUYER = AT_TUNA_MARKET = true;
-        }
-        else if(market.mouseOver()) {
+      }
+      else if(!AT_TUNA_MARKET && !SHOW_BUYER) {
+        if(market.mouseOver())
           AT_FISH_MARKET = true;
-        }
       }
       else if(AT_TUNA_MARKET && !SHOW_BUYER) {
         for(int i = 0; i < tunas.length; i++) {
@@ -327,14 +331,17 @@ class MarketGame {
   private void nextDay() {
     DAY++;
     if(INTRO) INTRO = false;
-    RECEIVED_EARNINGS = b.LEAVE = MORN_TALK = false;
+    auction.WIN = RECEIVED_EARNINGS = b.LEAVE = MORN_TALK = false;
+    auction.totalReset();
     TEXTSTRING = b.INTRO_NUM + 1;
     CURRENT_SCREEN = 3;
+    for (Tuna t : tunas)
+      t.reset();
   }
 }
 //-------------------------------------------------------------------------------------------------//
 class Auction{
-  int YOUR_BID, BUYER_BID, HIGHEST_BID, DIGIT_ONE, DIGIT_TWO;
+  int YOUR_BID, BUYER_BID, HIGHEST_BID, DIGIT_ONE, DIGIT_TWO,YB_STORED;
   boolean WRONG_INPUT, WIN;
   PImage framel, framew, door;
   Buyer buyer;
@@ -384,38 +391,49 @@ class Auction{
     text("Highest bid", width*.5, height*.05); 
     textAlign(LEFT);
   }
-  void compareInput(IntList UI, StringList C) {
+  void compareInput(IntList UI, StringList C, String type) {
     String input = "";
     for(int i = 0; i < UI.size(); i++) 
       input = input + UI.get(i);
     for(int j = 0; j < C.size(); j++) {
       if(DIGIT_ONE == 0 && input.equals(C.get(j))) { 
         DIGIT_ONE = j;
-        YOUR_BID = DIGIT_ONE * 1000;
+        if(type == "Last") YOUR_BID = DIGIT_ONE * 1000;
+        else YB_STORED = DIGIT_ONE * 1000;
         break;
       }
       else if (DIGIT_ONE != 0 && input.equals(C.get(j))) {
         DIGIT_TWO = j;
-        YOUR_BID = YOUR_BID + DIGIT_TWO * 100;
+        YOUR_BID = YB_STORED + DIGIT_TWO * 100;
+        if(YOUR_BID <= BUYER_BID) WRONG_INPUT = true;
+        else HIGHEST_BID = YOUR_BID;
         break;
       }
     }
     if(DIGIT_ONE == 0) WRONG_INPUT = true;
-    convertInputs();
+    //convertInputs();
   }
   private void convertInputs() {
     if(YOUR_BID > BUYER_BID) HIGHEST_BID = YOUR_BID;
-    else if (BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
+    else if (BUYER_BID > YOUR_BID) WRONG_INPUT = true;
   }
   void buyerBid() {
-    //calculates if buyer will bid or not
-    //if so, calculate their bid
-    //using buyer.BID_CHANCE
+    int result = round(random(0,100));
+    if(result <= buyer.BID_CHANCE) {
+      BUYER_BID = YOUR_BID + 100;
+      buyer.BID_CHANCE-=pow(2,buyer.RATE);
+      buyer.RATE++;
+    }
     if(BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
     else WIN = true;
     }
-  void reset() {
-    DIGIT_ONE = DIGIT_TWO = 0; 
+  void miniReset() {
+    DIGIT_ONE = DIGIT_TWO = 0;
+    WRONG_INPUT = false;
+  }
+  void totalReset() {
+    YOUR_BID = BUYER_BID = DIGIT_ONE = DIGIT_TWO = 0;
+    WRONG_INPUT = false;
   }
   boolean mouseOver() {
     if(mouseX > 800 && mouseX < 1100 
@@ -450,7 +468,9 @@ class Market{
     text("Fresh Fish", 140, 190);
   }
   void drawMarket() {
-    background(10, 150);
+    rectMode(CORNER);
+    fill(10,200);
+    rect(0, 0, width, height);
     //close up of fish in their containers
   }
   //need to add button for buying multiple fish
@@ -547,6 +567,7 @@ class Person{
 //-------------------------------------------------------------------------------------------------//
 class Buyer extends Person{
   Float BID_CHANCE;
+  int RATE;
    Buyer() {
      name = "Boyr";
      DIALOGUE_NUM = 4;
@@ -557,6 +578,7 @@ class Buyer extends Person{
      LOCX = img.width;
      fixTransparency();
      BID_CHANCE = 80.0;
+     RATE = 1;
    }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -599,7 +621,7 @@ class Tuna{
   void draw() {
     if(!LOOK_AT) {
       fill(0,0,200);
-      ellipse(loc.x, loc.y, 80, 80); 
+      ellipse(loc.x, loc.y, size, size); 
     }
   }
   boolean mouseOver() {
