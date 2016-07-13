@@ -18,23 +18,27 @@ Prevent your boss from becoming unhappy, which will result in you getting fired.
 
 ###Functions
 + Change boss happiness depending on what tuna (and other fish) you buy
-+ Timer for auction minigame
++ Change restaurant income (your money to spend)
 + Timer for overall buying (to buy tuna and other fish)
++ Fish stall quantity button
 
 ###Looks
 + Tuna, salmon, mackerel, squid image
 + Loading screen
 + Setting screen
++ Fish market stall screen
 + Next day cutscene
++ Notes icon
 
 ###Extra
 + Music
 + Calender screen to show how many successful restaurant has been
++ More dialogue
 
 ##Dates
 
-+ 7/18 Have fully functioning game - code works, forget aesthetics  
-+ 7/21 Add extra features (load, save, etc)  
++ 7/18 Have fully functioning game - code works, does everything I want, forget aesthetics  
++ 7/21 Add extra features (load, save, memory, etc)  
 + 7/24 Add all aesthetics - make pretty  
 + ?/? Turn into App  
   
