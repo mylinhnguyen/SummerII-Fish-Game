@@ -60,7 +60,7 @@ class MarketGame {
     notepad = new Notes();
     auction = new Auction();
     market = new Market();
-    timer = new Timer(5, new PVector(width/2, height/2));
+    timer = new Timer(5, new PVector(width/2-85, 500));
     int x = 100;
     int y = 300;
     for(int i = 0; i < tunas.length; i++) {
@@ -85,6 +85,7 @@ class MarketGame {
     textStrings.set("Boss10","Received ");
     textStrings.set("Boss11", "\"Welcome back. Did you get what I wanted?\"");
     textStrings.set("Boss12", "\"There better still be cash on you or else if comes out of your paycheck.\"");
+    //add dialogue for when giving fish to boss
     textStrings.set("Boss13","\"See you tomorrow.\"");
     textStrings.set("Give", "Handed fish over.");
     textStrings.set("Buyer1", "\"Haven't seen you around before. Are you new?\"");
@@ -165,6 +166,7 @@ class MarketGame {
         auction.display();
         if(timer.TIME_UP) {
           tunas[SELECTED_TUNA].LOOK_AT = true;
+          auction.totalReset();
           GAMESTART = false;
         }
       }
@@ -183,7 +185,7 @@ class MarketGame {
   //Probably could make this simpler...
   void inputKey() {    
     //Input keys for Boss Screen
-    if(CURRENT_SCREEN == 3 && keyCode == 32) 
+    if(CURRENT_SCREEN == 3 && keyCode == 32) {
       if(b.LEAVE) CURRENT_SCREEN = 2;
       
       if(!MORN_TALK) {
@@ -201,11 +203,11 @@ class MarketGame {
         }
       }
       else {
-        if(TEXTSTRING < b.AFTER_NUM) 
+        if(TEXTSTRING < b.DIALOGUE_NUM) 
           TEXTSTRING++;
         else b.LEAVE = true;
       }
-      
+    }
     //Input keys for Play Screen
     if(CURRENT_SCREEN == 4) {
        if(!GAMESTART && (keyCode == 78 || keyCode == 110)) 
@@ -214,8 +216,8 @@ class MarketGame {
          AT_FISH_MARKET = false;
        }
        else if(!GAMESTART && AT_TUNA_MARKET && SHOW_BUYER && keyCode == 32) {
-         if((INTRO && TEXTSTRING <= auction.buyer.INTRO_NUM) || (!INTRO && TEXTSTRING <= auction.buyer.DAY_NUM)) {
-           //idk why left blank but do not put TEXTSTRING++
+         if((INTRO && TEXTSTRING < auction.buyer.INTRO_NUM) || (!INTRO && TEXTSTRING < auction.buyer.DAY_NUM)) {
+           TEXTSTRING++;
          }
          else SHOW_BUYER = false;
        }
@@ -230,6 +232,7 @@ class MarketGame {
              GAMESTART = false;
              tunas[SELECTED_TUNA].LOOK_AT = true;
              //change println to text on screen
+             auction.totalReset();
              println("Minigame lost");
            }
          }
@@ -241,6 +244,7 @@ class MarketGame {
            if(auction.WRONG_INPUT) {
              GAMESTART = false;
              tunas[SELECTED_TUNA].LOOK_AT = true;
+             auction.totalReset();
              println("Minigame lost");
            }
            auction.miniReset();
@@ -254,14 +258,14 @@ class MarketGame {
            ALLOW_INPUTS = true;
          }
        }
-       else if(auction.WIN && keyCode == 32 || keyCode == 10) {
+       else if(auction.WIN && keyCode == 32) {
          TEXTSTRING = b.DAY_NUM + 1;
          ALLOW_INPUTS = false;
          CURRENT_SCREEN = 3;
        }
     }
     //Input keys for Loading Screen
-    if(CURRENT_SCREEN == 2 && keyCode == 39) {
+    if(CURRENT_SCREEN == 2 && keyCode == 32) {
       //reset MarketGame stuff here
       nextDay();
       CURRENT_SCREEN = 3;
@@ -349,7 +353,7 @@ class MarketGame {
 class Auction{
   int YOUR_BID, BUYER_BID, HIGHEST_BID, DIGIT_ONE, DIGIT_TWO,YB_STORED;
   boolean WRONG_INPUT, WIN;
-  PImage framel, framew, door;
+  PImage framel, framew, door, a_note;
   Buyer buyer;
   Auction() {
     DIGIT_TWO = DIGIT_ONE = HIGHEST_BID = YOUR_BID = BUYER_BID = 0;
@@ -360,6 +364,7 @@ class Auction{
     framew = loadImage("darkconcrete.jpg");
     framel.resize(10, 270);
     framew.resize(300, 10);
+    a_note = loadImage("auctionNote.jpg");
   }
   void displayIcon() {
     noStroke();
@@ -396,6 +401,7 @@ class Auction{
     textSize(35);
     text("Highest bid", width*.5, height*.05); 
     textAlign(LEFT);
+    image(a_note, 0, height-125);
   }
   void compareInput(IntList UI, StringList C, String type) {
     String input = "";
@@ -417,7 +423,6 @@ class Auction{
       }
     }
     if(DIGIT_ONE == 0) WRONG_INPUT = true;
-    //convertInputs();
   }
   void buyerBid() {
     int result = round(random(0,100));
@@ -436,6 +441,7 @@ class Auction{
   void totalReset() {
     YOUR_BID = BUYER_BID = DIGIT_ONE = DIGIT_TWO = 0;
     WRONG_INPUT = false;
+    buyer.BID_CHANCE = 100.0;
   }
   boolean mouseOver() {
     if(mouseX > 800 && mouseX < 1100 
@@ -495,6 +501,7 @@ class Notes{
     OPEN_UP = false;
   }
   void display() {
+    noStroke();
     if(OPEN_UP) {
       fill(10, 150);
       rect(0, 0, width, height);
@@ -621,6 +628,7 @@ class Tuna{
     loc = l;
   }
   void draw() {
+    noStroke();
     if(!LOOK_AT) {
       fill(0,0,200);
       ellipse(loc.x, loc.y, size, size); 
@@ -701,7 +709,7 @@ class Timer{
     secondLimit = s;
     COUNTDOWN = TIME_UP = false;
     loc = l;
-    size = new PVector(100, 25);
+    size = new PVector(170, 40);
     newSize = 100;
     red = color(250, 0, 0);
     yellow = color(250, 250, 0);
@@ -728,6 +736,7 @@ class Timer{
   }
   void display() {
     stroke(240);
+    fill(240);
     rect(loc.x, loc.y, size.x, size.y, 3);
     fill(currentCol);
     noStroke();
