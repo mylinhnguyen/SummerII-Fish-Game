@@ -16,18 +16,25 @@ Prevent your boss from becoming unhappy, which will result in you getting fired.
 
 ##Need to (in no particular order):  
 
-    1. Add buttons to Start screen 
-    2. Add music 
-    3. Work on actual game part - where user input is important  
-    4. Reduce memory usage  
-    5. Make tuna image  
-    6. Change boss happiness depending on what fish you buy  
-    7. Loading Screen  
-    8. Option/Setting Screen  
-    9. Add Calender Screen to show how many customers a day there have been  
-    10. Fix countdown in Play screen to show seconds before game part starts  
-    11. Draw Market in Play Screen  
-    12. Add time limit for auction game - time user has to input correct keys  
- 
-  
+###Functions
++ Change boss happiness depending on what tuna (and other fish) you buy
++ Timer for auction minigame
++ Timer for overall buying (to buy tuna and other fish)
+
+###Looks
++ Tuna, salmon, mackerel, squid image
++ Loading screen
++ Setting screen
++ Next day cutscene
+
+###Extra
++ Music
++ Calender screen to show how many successful restaurant has been
+
+##Dates
+
++ 7/18 Have fully functioning game - code works, forget aesthetics  
++ 7/21 Add extra features (load, save, etc)  
++ 7/24 Add all aesthetics - make pretty  
++ ?/? Turn into App  
   
