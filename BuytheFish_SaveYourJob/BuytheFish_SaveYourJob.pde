@@ -22,11 +22,12 @@ class MarketGame {
   StringDict textStrings;
   PFont regular, regular_italic, regular_bold, bornaddict;
   PImage bg, bg1, bg2, bg3, bg4, bg5, bg6;
-  boolean MORN_TALK, GAMESTART, ALLOW_INPUTS, COUNTED, INTRO, RECEIVED_EARNINGS, AT_TUNA_MARKET, SHOW_BUYER;
+  boolean MORN_TALK, GAMESTART, ALLOW_INPUTS, COUNTED, INTRO, RECEIVED_EARNINGS, AT_TUNA_MARKET, AT_FISH_MARKET, SHOW_BUYER;
   Boss b;
-  Button start, option, exit;
+  Button start, info, exit;
   Notes notepad;
   Auction auction;
+  Market market;
   Tuna[] tunas = new Tuna[10];
   MarketGame() {
     SELECTED_TUNA = CURRENT_SCREEN = 0;
@@ -35,7 +36,7 @@ class MarketGame {
     userInput = new IntList();
     combos = new StringList();
     addCombos();
-    SHOW_BUYER = AT_TUNA_MARKET = RECEIVED_EARNINGS = MORN_TALK = GAMESTART = ALLOW_INPUTS = COUNTED = false;
+    SHOW_BUYER = AT_FISH_MARKET = AT_TUNA_MARKET = RECEIVED_EARNINGS = MORN_TALK = GAMESTART = ALLOW_INPUTS = COUNTED = false;
     INTRO = true;
     textStrings = new StringDict();
     addStrings();
@@ -52,10 +53,11 @@ class MarketGame {
     bg6 = loadImage("background6.jpg");
     b = new Boss("Soosh-E");
     start = new Button("Start", new PVector(width/7, height*.5), 150, 70, 0);
-    option = new Button("Settings", new PVector(width/10, height*.6), 180, 180, 180);
+    info = new Button("Info", new PVector(width/10, height*.6), 180, 180, 180);
     exit = new Button("Exit", new PVector(width/7, height*.7), 0, 150, 0);
     notepad = new Notes();
     auction = new Auction();
+    market = new Market();
     int x = 100;
     int y = 300;
     for(int i = 0; i < tunas.length; i++) {
@@ -120,7 +122,7 @@ class MarketGame {
   private void StartScreen() {
     background(bg);
     start.draw();
-    option.draw();
+    info.draw();
     exit.draw();
   }
   private void SettingScreen() {
@@ -140,6 +142,7 @@ class MarketGame {
       background(bg6);
       drawUI(false);
       auction.displayIcon();
+      market.displayIcon();
       notepad.display();
     }
     if(AT_TUNA_MARKET) {
@@ -156,6 +159,9 @@ class MarketGame {
       else if(GAMESTART) {
         auction.display();
       }
+    }
+    else if(AT_FISH_MARKET) {
+      market.drawMarket(); 
     }
   }
   private void LoadingScreen() {
@@ -195,8 +201,12 @@ class MarketGame {
     if(CURRENT_SCREEN == 4) {
        if(!GAMESTART && (keyCode == 78 || keyCode == 110)) 
          notepad.openClose();
+       else if(AT_FISH_MARKET && keyCode == 8) {
+         AT_FISH_MARKET = false;
+       }
        else if(!GAMESTART && AT_TUNA_MARKET && SHOW_BUYER && keyCode == 32) {
          if((INTRO && TEXTSTRING <= auction.buyer.INTRO_NUM) || (!INTRO && TEXTSTRING <= auction.buyer.DAY_NUM)) {
+           //idk why left blank but do not put TEXTSTRING++
          }
          else SHOW_BUYER = false;
        }
@@ -240,13 +250,6 @@ class MarketGame {
          CURRENT_SCREEN = 3;
        }
     }
-    //might need to remove or change eventually
-    /*
-    else if(CURRENT_SCREEN == 4 && !GAMESTART && keyCode == 39) {
-      TEXTSTRING = b.DAY_NUM + 1;
-      CURRENT_SCREEN = 3;
-    }
-    */
     //Input keys for Loading Screen
     if(CURRENT_SCREEN == 2 && keyCode == 39) {
       //reset MarketGame stuff here
@@ -259,14 +262,19 @@ class MarketGame {
     if(CURRENT_SCREEN == 0) {
       if(start.mouseOver())
         CURRENT_SCREEN = 3;
-      else if(option.mouseOver())
+      else if(info.mouseOver())
         CURRENT_SCREEN = 1;
       else if(exit.mouseOver()) 
         exit();
     }
     if(CURRENT_SCREEN == 4) {
-      if(auction.mouseOver()&& !AT_TUNA_MARKET && ! SHOW_BUYER && !auction.WIN) {
-        SHOW_BUYER = AT_TUNA_MARKET = true;
+      if(!AT_TUNA_MARKET && !SHOW_BUYER && !auction.WIN) {
+        if(auction.mouseOver()) {
+          SHOW_BUYER = AT_TUNA_MARKET = true;
+        }
+        else if(market.mouseOver()) {
+          AT_FISH_MARKET = true;
+        }
       }
       else if(AT_TUNA_MARKET && !SHOW_BUYER) {
         for(int i = 0; i < tunas.length; i++) {
@@ -399,6 +407,43 @@ class Auction{
   }
 }
 //-------------------------------------------------------------------------------------------------//
+class Market{
+  PImage stallbase, stallbeam;
+  int SALMON_PRICE, MACKEREL_PRICE, SQUID_PRICE;
+  Market() {
+    stallbase = loadImage("woodcrate.jpg");
+    stallbeam = loadImage("woodbeam.jpg");
+    stallbeam.resize(50,200);
+  }
+  void displayIcon() {
+    image(stallbeam, 200, 200);
+    image(stallbeam, 450, 200);
+    fill(190);
+    rect(220,375,80,60,6);
+    rect(310,375,80,60,6);
+    rect(400,375,80,60,6);
+    image(stallbase, 150, 400);
+    fill(230);
+    stroke(70, 50, 0);
+    strokeWeight(5);
+    rect(100, 100 ,500, 125, 8);
+    fill(10);
+    textSize(80);
+    text("Fresh Fish", 140, 190);
+  }
+  void drawMarket() {
+    background(10, 150);
+    //close up of fish in their containers
+  }
+  //need to add button for buying multiple fish
+  
+  boolean mouseOver() {
+    if((mouseX > 100 && mouseX < 600) && (mouseY > 100 && mouseY < 600))
+      return true;
+    return false;
+}
+}
+//-------------------------------------------------------------------------------------------------//
 class Notes{
   PImage note;
   PVector loc;
@@ -522,19 +567,19 @@ class Boss extends Person{
 class Tuna{
   Float quality;
   int weight, fat, size;
-  boolean BOUGHT;
+  boolean LOOK_AT;
   PVector loc;
   
   Tuna(PVector l, int s) {
     fat = round(random(3,20));
     weight = abs(round(randomGaussian() * 150 + fat * 5));
     quality = abs(randomGaussian() * 2);
-    BOUGHT = false;
+    LOOK_AT = false;
     size = s;
     loc = l;
   }
   void draw() {
-    if(!BOUGHT) {
+    if(!LOOK_AT) {
       fill(0,0,200);
       ellipse(loc.x, loc.y, 80, 80); 
     }
@@ -549,7 +594,7 @@ class Tuna{
     fat = round(random(3,20));
     weight = abs(round(randomGaussian() * 150 + fat * 5));
     quality = abs(randomGaussian() * 2);
-    BOUGHT = false;
+    LOOK_AT = false;
   }
 }
 //-------------------------------------------------------------------------------------------------//
