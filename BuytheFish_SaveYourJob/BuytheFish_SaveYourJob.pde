@@ -716,8 +716,8 @@ class Timer{
     if(!TIME_UP) {
       currentSec = second();
       currentMin = minute();
-      if(currentMin !=  startMin)
-         timeLeft = timeLimitSec - currentSec + 60;
+      if(currentMin !=  startMin && timeLimitSec >= 60)
+         timeLeft = timeLimitSec - currentSec - 60;
       else 
         timeLeft = timeLimitSec - currentSec;
       currentCol = lerpColor(red, green, timeLeft*.1);
