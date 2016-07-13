@@ -30,6 +30,7 @@ class MarketGame {
   Auction auction;
   Market market;
   Tuna[] tunas = new Tuna[10];
+  Timer timer;
   MarketGame() {
     SELECTED_TUNA = CURRENT_SCREEN = 0;
     DAY = 1;
@@ -59,6 +60,7 @@ class MarketGame {
     notepad = new Notes();
     auction = new Auction();
     market = new Market();
+    timer = new Timer(5, new PVector(width/2, height/2));
     int x = 100;
     int y = 300;
     for(int i = 0; i < tunas.length; i++) {
@@ -158,7 +160,13 @@ class MarketGame {
         displayText();
       }
       else if(GAMESTART) {
+        timer.run();
+        timer.display();
         auction.display();
+        if(timer.TIME_UP) {
+          tunas[SELECTED_TUNA].LOOK_AT = true;
+          GAMESTART = false;
+        }
       }
     }
     else if(AT_FISH_MARKET) {
@@ -219,10 +227,9 @@ class MarketGame {
            auction.compareInput(userInput, combos, "");
            userInput.clear();
            if(auction.WRONG_INPUT) {
-             //make this tuna not bidable anymore, LOOK_AT = true;
-             //user must try another fish
              GAMESTART = false;
              tunas[SELECTED_TUNA].LOOK_AT = true;
+             //change println to text on screen
              println("Minigame lost");
            }
          }
@@ -232,14 +239,13 @@ class MarketGame {
            userInput.clear();
            ALLOW_INPUTS = false;
            if(auction.WRONG_INPUT) {
-            //make this tuna not bidable anymore, LOOK_AT = true;
-            //user must try another fish
              GAMESTART = false;
              tunas[SELECTED_TUNA].LOOK_AT = true;
              println("Minigame lost");
            }
            auction.miniReset();
            auction.buyerBid();
+           timer.reset();
            if(auction.WIN) {
              //user buys the fish they chose SELECTED_TUNA
              AT_TUNA_MARKET = GAMESTART = false;
@@ -249,7 +255,6 @@ class MarketGame {
          }
        }
        else if(auction.WIN && keyCode == 32 || keyCode == 10) {
-         println("Leaving market");
          TEXTSTRING = b.DAY_NUM + 1;
          ALLOW_INPUTS = false;
          CURRENT_SCREEN = 3;
@@ -271,6 +276,7 @@ class MarketGame {
         CURRENT_SCREEN = 1;
       else if(exit.mouseOver()) 
         exit();
+      timer.reset();
     }
     if(CURRENT_SCREEN == 4) {
       if(!AT_TUNA_MARKET && !SHOW_BUYER && !auction.WIN) {
@@ -284,8 +290,8 @@ class MarketGame {
       else if(AT_TUNA_MARKET && !SHOW_BUYER) {
         for(int i = 0; i < tunas.length; i++) {
           if(tunas[i].mouseOver()) {
-            println("Chose tuna");
             ALLOW_INPUTS = GAMESTART = true;
+            timer.reset();
             SELECTED_TUNA = i;
           }
         }
@@ -412,10 +418,6 @@ class Auction{
     }
     if(DIGIT_ONE == 0) WRONG_INPUT = true;
     //convertInputs();
-  }
-  private void convertInputs() {
-    if(YOUR_BID > BUYER_BID) HIGHEST_BID = YOUR_BID;
-    else if (BUYER_BID > YOUR_BID) WRONG_INPUT = true;
   }
   void buyerBid() {
     int result = round(random(0,100));
@@ -577,7 +579,7 @@ class Buyer extends Person{
      img = loadImage("buyer.jpg");
      LOCX = img.width;
      fixTransparency();
-     BID_CHANCE = 80.0;
+     BID_CHANCE = 100.0;
      RATE = 1;
    }
 }
@@ -687,5 +689,53 @@ class Button{
     && mouseY >= location.y-20 && mouseY <= location.y + 20) 
       return true;
     return false;
+  }
+}
+//-------------------------------------------------------------------------------------------------//
+class Timer{
+  int secondLimit, currentSec, currentMin, startMin, timeLimitSec, timeLimitMin, timeLeft, newSize;
+  boolean COUNTDOWN, TIME_UP;
+  PVector loc, size;
+  color red, yellow, green, currentCol;
+  Timer(int s, PVector l) {
+    secondLimit = s;
+    COUNTDOWN = TIME_UP = false;
+    loc = l;
+    size = new PVector(100, 25);
+    newSize = 100;
+    red = color(250, 0, 0);
+    yellow = color(250, 250, 0);
+    currentCol = green = color(0, 250, 0);
+  }
+  void run() {
+    if(!COUNTDOWN) {
+      timeLimitSec = second() + secondLimit;
+      startMin = minute();
+      COUNTDOWN = true; 
+    }
+    if(!TIME_UP) {
+      currentSec = second();
+      currentMin = minute();
+      if(currentMin !=  startMin)
+         timeLeft = timeLimitSec - currentSec + 60;
+      else 
+        timeLeft = timeLimitSec - currentSec;
+      currentCol = lerpColor(red, green, timeLeft*.1);
+      newSize= (int)(size.x * (timeLeft*.1)*2);
+      if(timeLeft <= 0)
+        TIME_UP = true;
+    }
+  }
+  void display() {
+    stroke(240);
+    rect(loc.x, loc.y, size.x, size.y, 3);
+    fill(currentCol);
+    noStroke();
+    rect(loc.x, loc.y, newSize, size.y, 3);
+  }
+  void reset() {
+    currentCol = green;
+    newSize = int(size.x);
+    TIME_UP = COUNTDOWN = false;
   }
 }
