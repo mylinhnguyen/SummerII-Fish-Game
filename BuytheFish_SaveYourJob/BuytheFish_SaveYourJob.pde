@@ -19,7 +19,7 @@ void mouseClicked() {
 class MarketGame {
   int CURRENT_SCREEN, DAY, TEXTSTRING, SELECTED_TUNA;
   IntList userInput;
-  StringList combos;
+  StringList combos, locations;
   StringDict textStrings;
   PFont regular, regular_italic, regular_bold, bornaddict;
   PImage bg, bg1, bg2, bg3, bg4, bg5, bg6;
@@ -37,6 +37,8 @@ class MarketGame {
     TEXTSTRING = 1;
     userInput = new IntList();
     combos = new StringList();
+    locations = new StringList();
+    addLocations();
     addCombos();
     SHOW_BUYER = AT_FISH_MARKET = AT_TUNA_MARKET = RECEIVED_EARNINGS = MORN_TALK = GAMESTART = ALLOW_INPUTS = COUNTED = false;
     INTRO = true;
@@ -64,7 +66,7 @@ class MarketGame {
     int x = 100;
     int y = 300;
     for(int i = 0; i < tunas.length; i++) {
-      tunas[i] = new Tuna(new PVector(x, y), 80); 
+      tunas[i] = new Tuna(new PVector(x, y), 80, locations.get(int(random(0,locations.size()-1)))); 
       x+=250;
       if(i == 4) {
         x = 100;
@@ -105,6 +107,14 @@ class MarketGame {
     combos.append("39383738");
     combos.append("37393938");
   }
+  private void addLocations() {
+    locations.append("New Zealand");
+    locations.append("California");
+    locations.append("Nova Scotia");
+    locations.append("Mexico");
+    locations.append("Mediterranean");
+    locations.append("Japan");
+  }
   void play() {
     if(CURRENT_SCREEN == 0)
       StartScreen();
@@ -142,16 +152,16 @@ class MarketGame {
     displayText();
   }
   private void MarketScreen() {
-    if(!AT_TUNA_MARKET) {
-      background(bg6);
-      drawUI(false);
-      auction.displayIcon();
-      market.displayIcon();
-      notepad.display();
-    }
+    background(bg6);
+    drawUI(false);
+    auction.displayIcon();
+    market.displayIcon();
+    notepad.display();
+    if(auction.WIN) drawWinText();
     if(AT_TUNA_MARKET) {
       background(bg3);
       notepad.display();
+      textFont(regular);
       for(int i = 0; i < tunas.length; i++) 
         tunas[i].draw(); 
       drawUI(false);
@@ -169,10 +179,12 @@ class MarketGame {
           auction.totalReset();
           GAMESTART = false;
         }
+      
       }
+      if(tunas[SELECTED_TUNA].LOOK_AT) drawLoseText();
     }
-    else if(AT_FISH_MARKET) {
-      market.drawMarket(); 
+    else if(AT_FISH_MARKET){
+      market.drawMarket();
     }
   }
   private void LoadingScreen() {
@@ -233,7 +245,6 @@ class MarketGame {
              tunas[SELECTED_TUNA].LOOK_AT = true;
              //change println to text on screen
              auction.totalReset();
-             println("Minigame lost");
            }
          }
          //User inputs second digit
@@ -245,15 +256,22 @@ class MarketGame {
              GAMESTART = false;
              tunas[SELECTED_TUNA].LOOK_AT = true;
              auction.totalReset();
-             println("Minigame lost");
            }
            auction.miniReset();
            auction.buyerBid();
            timer.reset();
            if(auction.WIN) {
              //user buys the fish they chose SELECTED_TUNA
-             AT_TUNA_MARKET = GAMESTART = false;
-             println("Minigame won");
+             if(auction.YOUR_BID > b.comp.balance) {
+               GAMESTART = false;
+               tunas[SELECTED_TUNA].LOOK_AT = true;
+               auction.totalReset();
+               auction.WIN = false;
+             }
+             else {
+               b.comp.buy(auction.YOUR_BID);
+               AT_TUNA_MARKET = GAMESTART = false;
+             }
            }
            ALLOW_INPUTS = true;
          }
@@ -283,14 +301,16 @@ class MarketGame {
       timer.reset();
     }
     if(CURRENT_SCREEN == 4) {
-      if(!AT_TUNA_MARKET && !SHOW_BUYER && !auction.WIN) {
-        if(auction.mouseOver())
+      if(!AT_TUNA_MARKET) {
+        if(auction.mouseOver() && !auction.WIN)
           SHOW_BUYER = AT_TUNA_MARKET = true;
-      }
-      else if(!AT_TUNA_MARKET && !SHOW_BUYER) {
-        if(market.mouseOver())
+        else if(market.mouseOver()) {
           AT_FISH_MARKET = true;
+        }
       }
+      //else if(!AT_TUNA_MARKET) {
+        
+      //}
       else if(AT_TUNA_MARKET && !SHOW_BUYER) {
         for(int i = 0; i < tunas.length; i++) {
           if(tunas[i].mouseOver()) {
@@ -311,12 +331,12 @@ class MarketGame {
       }
       else {
         textFont(regular);
-        text(textStrings.get("Boss" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
+        text("Boss: " + textStrings.get("Boss" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
       }
     }
     else if(CURRENT_SCREEN == 4 && !GAMESTART && !ALLOW_INPUTS && SHOW_BUYER){
       textFont(regular);
-      text(textStrings.get("Buyer" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
+      text(auction.buyer.name + ": " + textStrings.get("Buyer" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
     }
   }
   private void drawUI(boolean bool) {
@@ -332,6 +352,18 @@ class MarketGame {
       noStroke();
       rect(0, height*.75, width, height*.25); 
     }
+  }
+  private void drawLoseText() {
+    textFont(bornaddict);
+    textSize(30);
+    fill(240, millis() % 1020);
+    text("You didn't get to buy the tuna.", width*.3, height*.05); 
+  }
+  private void drawWinText() {
+    textFont(bornaddict); 
+    textSize(30);
+    fill(240, millis() % 1020);
+    text("You bought the tuna!", width*.4, height*.05);
   }
   private void drawContinue() {
     textSize(22);
@@ -388,7 +420,7 @@ class Auction{
     rectMode(CENTER);
     rect(width*.2, height*.45, 200, 40);
     rect(width*.8, height*.45, 200, 40);
-    rect(width*.5, height*.1, 300, 50);
+    //rect(width*.5, height*.1, 300, 50);
     rectMode(CORNER);
     textSize(30);
     textAlign(CENTER);
@@ -399,7 +431,7 @@ class Auction{
     text("Your bid", width*.2, height*.4);
     text("Rival bid", width*.8, height*.4);
     textSize(35);
-    text("Highest bid", width*.5, height*.05); 
+    //text("Highest bid", width*.5, height*.05); 
     textAlign(LEFT);
     image(a_note, 0, height-125);
   }
@@ -410,7 +442,8 @@ class Auction{
     for(int j = 0; j < C.size(); j++) {
       if(DIGIT_ONE == 0 && input.equals(C.get(j))) { 
         DIGIT_ONE = j;
-        if(type == "Last") YOUR_BID = DIGIT_ONE * 1000;
+        if(type == "Last" && DIGIT_ONE * 1000 > BUYER_BID) YOUR_BID = DIGIT_ONE * 1000;
+        else if(type == "Last" && DIGIT_ONE * 1000 <= BUYER_BID) WRONG_INPUT = true;
         else YB_STORED = DIGIT_ONE * 1000;
         break;
       }
@@ -418,7 +451,6 @@ class Auction{
         DIGIT_TWO = j;
         YOUR_BID = YB_STORED + DIGIT_TWO * 100;
         if(YOUR_BID <= BUYER_BID) WRONG_INPUT = true;
-        else HIGHEST_BID = YOUR_BID;
         break;
       }
     }
@@ -484,7 +516,7 @@ class Market{
   //need to add button for buying multiple fish
   
   boolean mouseOver() {
-    if((mouseX > 100 && mouseX < 600) && (mouseY > 100 && mouseY < 600))
+    if(mouseX > 100 && mouseX < 600 && mouseY > 100 && mouseY < 600)
       return true;
     return false;
 }
@@ -531,7 +563,7 @@ class Company{
     name = n; 
     balance = 0;
     TUNA_AMOUNT = TUNA_QUALITY = 0;
-    earnings = 10000;
+    earnings = 5000;
   }
   //get rid of old tuna and replace it with freshly bought one
   void restock(Tuna t) {
@@ -540,6 +572,12 @@ class Company{
   }
   void openRestaurant() {
     //determine sales here 
+  }
+  void buy(int amount) {
+    balance-=amount; 
+  }
+  void setEarnings(int e) {
+    earnings = e;
   }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -618,20 +656,37 @@ class Tuna{
   int weight, fat, size;
   boolean LOOK_AT;
   PVector loc;
+  String locCaught;
   
-  Tuna(PVector l, int s) {
+  Tuna(PVector l, int s, String lc) {
     fat = round(random(3,20));
     weight = abs(round(randomGaussian() * 150 + fat * 5));
     quality = abs(randomGaussian() * 2);
     LOOK_AT = false;
     size = s;
     loc = l;
+    locCaught = lc;
   }
   void draw() {
     noStroke();
     if(!LOOK_AT) {
       fill(0,0,200);
       ellipse(loc.x, loc.y, size, size); 
+      if(this.mouseOver()) {
+        fill(240, 200);
+        if(mouseX+200 > width) {
+          rect(mouseX - 200, mouseY, 200, 100);
+          fill(10);
+          textSize(20);
+          text("Weight: " + this.weight + "\n" + "Caught: " + this.locCaught, mouseX - 195, mouseY+10, 200, 100);
+        }
+        else{
+          rect(mouseX, mouseY, 200, 100);
+          fill(10);
+          textSize(20);
+          text("Weight: " + this.weight + "\n" + "Caught: " + this.locCaught, mouseX+5, mouseY+10, 200, 100);
+        }        
+      }
     }
   }
   boolean mouseOver() {
