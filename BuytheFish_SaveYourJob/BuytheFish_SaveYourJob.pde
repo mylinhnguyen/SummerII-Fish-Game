@@ -1,4 +1,5 @@
 MarketGame mg;
+int num = 0;
 
 void setup() {
   size(1200,800);
@@ -10,6 +11,10 @@ void draw() {
 }
 void keyPressed() {
   mg.inputKey();
+  if(key == 's') {
+    save("Screenshot" + num+".jpg");
+    num++;
+  }
 }
 void mouseClicked() {
   mg.mouseInput();
@@ -17,19 +22,20 @@ void mouseClicked() {
 //-------------------------------------------------------------------------------------------------//
 //↑ ↓ → ←
 class MarketGame {
-  int CURRENT_SCREEN, DAY, TEXTSTRING, SELECTED_TUNA;
+  int CURRENT_SCREEN, DAY, TEXTSTRING, SELECTED_TUNA, CUSTOMER_COUNT;
   IntList userInput;
   StringList combos, locations;
   StringDict textStrings;
   PFont regular, regular_italic, regular_bold, bornaddict;
   PImage bg, bg1, bg2, bg3, bg4, bg5, bg6;
-  boolean MORN_TALK, GAMESTART, ALLOW_INPUTS, COUNTED, INTRO, RECEIVED_EARNINGS, AT_TUNA_MARKET, AT_FISH_MARKET, SHOW_BUYER;
+  boolean MORN_TALK, GAMESTART, ALLOW_INPUTS, COUNTED, INTRO, RECEIVED_EARNINGS, AT_TUNA_MARKET, AT_FISH_MARKET, SHOW_BUYER, NEW_DAY_ANIM, STORE_CLOSE;
   Boss b;
   Button start, info, exit;
   Notes notepad;
   Auction auction;
   Market market;
   Tuna[] tunas = new Tuna[10];
+  Customer[] customers = new Customer[100];
   Timer timer;
   MarketGame() {
     SELECTED_TUNA = CURRENT_SCREEN = 0;
@@ -40,7 +46,7 @@ class MarketGame {
     locations = new StringList();
     addLocations();
     addCombos();
-    SHOW_BUYER = AT_FISH_MARKET = AT_TUNA_MARKET = RECEIVED_EARNINGS = MORN_TALK = GAMESTART = ALLOW_INPUTS = COUNTED = false;
+    STORE_CLOSE = NEW_DAY_ANIM = SHOW_BUYER = AT_FISH_MARKET = AT_TUNA_MARKET = RECEIVED_EARNINGS = MORN_TALK = GAMESTART = ALLOW_INPUTS = COUNTED = false;
     INTRO = true;
     textStrings = new StringDict();
     addStrings();
@@ -73,6 +79,8 @@ class MarketGame {
         y = 450;
       }
     }
+    for(int j = 0; j < customers.length; j++) 
+      customers[j] = new Customer();
   }
   private void addStrings() {
     textStrings.set("Boss1", "\"Welcome, new employee.\"");
@@ -189,16 +197,21 @@ class MarketGame {
   }
   private void LoadingScreen() {
     background(bg1);
+    if(!STORE_CLOSE) drawLoading();
+    else drawEnter();
   }
   private void ANewDayScreen() {
     //moon going down and sun coming up animation  
+    background(bg3);
+    openStore();
+    CURRENT_SCREEN = 2;
   }
   //Backspace 8, Enter 13, Spacebar 32, Left 37, Up 38, Right 39, Down 40
   //Probably could make this simpler...
   void inputKey() {    
     //Input keys for Boss Screen
     if(CURRENT_SCREEN == 3 && keyCode == 32) {
-      if(b.LEAVE) CURRENT_SCREEN = 2;
+      if(b.LEAVE) CURRENT_SCREEN = 5;
       
       if(!MORN_TALK) {
         if((INTRO && TEXTSTRING < b.INTRO_NUM) || (!INTRO && TEXTSTRING < b.DAY_NUM)) 
@@ -278,6 +291,8 @@ class MarketGame {
        }
        else if(auction.WIN && keyCode == 32) {
          TEXTSTRING = b.DAY_NUM + 1;
+         b.comp.restock(tunas[SELECTED_TUNA]);
+         println(b.comp.TUNA_AMOUNT + " " + b.comp.TUNA_QUALITY);
          ALLOW_INPUTS = false;
          CURRENT_SCREEN = 3;
        }
@@ -339,6 +354,18 @@ class MarketGame {
       text(auction.buyer.name + ": " + textStrings.get("Buyer" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
     }
   }
+  void openStore() {
+    CUSTOMER_COUNT = 0;
+    for(Customer c: customers) {
+      if(c.visit(b.comp.TUNA_QUALITY) != 0 && c.buyAmount <= b.comp.TUNA_AMOUNT) {
+        b.comp.makeEarnings(c.spend);
+        b.comp.sellTuna(c.buyAmount);
+        CUSTOMER_COUNT++;
+        println(CUSTOMER_COUNT + " " + b.comp.earnings);
+      }
+    }
+    STORE_CLOSE = true;
+  }
   private void drawUI(boolean bool) {
     textFont(bornaddict);
     textSize(25);
@@ -357,7 +384,7 @@ class MarketGame {
     textFont(bornaddict);
     textSize(30);
     fill(240, millis() % 1020);
-    text("You didn't get to buy the tuna.", width*.3, height*.05); 
+    text("You did not get to buy the tuna.", width*.3, height*.05); 
   }
   private void drawWinText() {
     textFont(bornaddict); 
@@ -370,15 +397,29 @@ class MarketGame {
     fill(10, millis() % 510);
     text("Press SPACEBAR to continue", width*.8, height*.95);
   }
+  private void drawEnter() {
+    textFont(regular_bold);
+    textSize(40);
+    fill(240, millis() % 1020);
+    text("Press Enter to continue", width*.8, height*.95);
+  }
+  private void drawLoading() {
+    textFont(regular_bold);
+    textSize(40);
+    fill(240, millis() % 1020);
+    text("Loading...", width*.8, height*.95);
+  }
   private void nextDay() {
     DAY++;
     if(INTRO) INTRO = false;
-    auction.WIN = RECEIVED_EARNINGS = b.LEAVE = MORN_TALK = false;
+    STORE_CLOSE = auction.WIN = RECEIVED_EARNINGS = b.LEAVE = MORN_TALK = false;
     auction.totalReset();
     TEXTSTRING = b.INTRO_NUM + 1;
     CURRENT_SCREEN = 3;
-    for (Tuna t : tunas)
+    for(Tuna t : tunas)
       t.reset();
+    for(Customer c : customers)
+      c.reset();
   }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -569,15 +610,16 @@ class Company{
   void restock(Tuna t) {
     TUNA_AMOUNT = t.weight;
     TUNA_QUALITY = t.quality;
-  }
-  void openRestaurant() {
-    //determine sales here 
+    earnings = 0;
   }
   void buy(int amount) {
     balance-=amount; 
   }
-  void setEarnings(int e) {
-    earnings = e;
+  void makeEarnings(int e) {
+    earnings+=e;
+  }
+  void sellTuna(int a) {
+    TUNA_AMOUNT-=a; 
   }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -647,6 +689,36 @@ class Boss extends Person{
     LEAVE = false;
     comp = new Company(n);
     fixTransparency();
+  }
+  void changeHappiness() {
+     
+  }
+}
+//-------------------------------------------------------------------------------------------------//
+class Customer{
+  int prefQuality, qCost, buyAmount, spend;
+  Customer() {
+    prefQuality = abs(round(randomGaussian() * 2));
+    println(prefQuality);
+    if(0 <= prefQuality && prefQuality < 2) qCost = 10;
+    else if(2 <= prefQuality && prefQuality < 4) qCost = 15;
+    else qCost = 20;
+  }
+  int visit(float t_quality) {
+    if(t_quality >= prefQuality) {
+      if(prefQuality == 0) buyAmount = 1;
+      else buyAmount = prefQuality;
+      spend = buyAmount * qCost;
+      return spend;
+    }
+    return 0;
+  }
+  void reset() {
+    prefQuality = abs(round(randomGaussian() * 2));
+    println(prefQuality);
+    if(0 <= prefQuality && prefQuality < 2) qCost = 10;
+    else if(2 <= prefQuality && prefQuality < 4) qCost = 15;
+    else qCost = 20; 
   }
 }
 //-------------------------------------------------------------------------------------------------//
