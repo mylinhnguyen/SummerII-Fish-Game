@@ -1,5 +1,4 @@
 MarketGame mg;
-int num = 0;
 
 void setup() {
   size(1200,800);
@@ -11,10 +10,6 @@ void draw() {
 }
 void keyPressed() {
   mg.inputKey();
-  if(key == 's') {
-    save("Screenshot" + num+".jpg");
-    num++;
-  }
 }
 void mouseClicked() {
   mg.mouseInput();
@@ -22,7 +17,7 @@ void mouseClicked() {
 //-------------------------------------------------------------------------------------------------//
 //↑ ↓ → ←
 class MarketGame {
-  int CURRENT_SCREEN, DAY, TEXTSTRING, SELECTED_TUNA, CUSTOMER_COUNT;
+  int CURRENT_SCREEN, DAY, TEXTSTRING, SELECTED_TUNA, CUSTOMER_COUNT, BOUGHT_PRICE;
   IntList userInput;
   StringList combos, locations;
   StringDict textStrings;
@@ -39,8 +34,8 @@ class MarketGame {
   Timer timer;
   MarketGame() {
     SELECTED_TUNA = CURRENT_SCREEN = 0;
-    DAY = 1;
-    TEXTSTRING = 1;
+    TEXTSTRING = DAY = 1;
+    BOUGHT_PRICE = 0;
     userInput = new IntList();
     combos = new StringList();
     locations = new StringList();
@@ -73,6 +68,7 @@ class MarketGame {
     int y = 300;
     for(int i = 0; i < tunas.length; i++) {
       tunas[i] = new Tuna(new PVector(x, y), 80, locations.get(int(random(0,locations.size()-1)))); 
+      println(tunas[i].print());
       x+=250;
       if(i == 4) {
         x = 100;
@@ -92,11 +88,20 @@ class MarketGame {
     textStrings.set("Boss7", "\"... Well? Get going. The fish aren't going to buy themselves. (Although that would save a lot of money)\"");
     textStrings.set("Boss8", "\"Time is money. Go.\"");
     textStrings.set("Boss9", "\"Wait. Before you go, here's what you can spend with what the restaurant earned yesterday.\"");
-    textStrings.set("Boss10","Received ");
-    textStrings.set("Boss11", "\"Welcome back. Did you get what I wanted?\"");
-    textStrings.set("Boss12", "\"There better still be cash on you or else if comes out of your paycheck.\"");
+    textStrings.set("Boss10", "\"Sales were horrible. I hope today is better.\"");
+    textStrings.set("Boss11", "\"Sales were great! Keep up the good work.\"");
+    
+    textStrings.set("Boss12","Received ");
+    textStrings.set("Boss13", "\"Welcome back. Did you get what I wanted?\"");
+    textStrings.set("Boss14", "\"There better still be cash on you or else if comes out of your paycheck.\"");
     //add dialogue for when giving fish to boss
-    textStrings.set("Boss13","\"See you tomorrow.\"");
+    textStrings.set("Boss15", "Handed over the fish.");
+    textStrings.set("Boss16", "\"Hmm...\"");
+    textStrings.set("Boss17", "\"The quality could be better, but it'll have to do.\"");
+    textStrings.set("Boss18", "\"Looks good. Let's hope it sales.\"");
+    textStrings.set("Boss19", "\"This is top quality! I'm sure this will sale for a lot.\"");
+    textStrings.set("Boss20", "\"Tomorrow we'll see how well your fish sales.\"");
+    textStrings.set("Boss21","\"See you tomorrow.\"");
     textStrings.set("Give", "Handed fish over.");
     textStrings.set("Buyer1", "\"Haven't seen you around before. Are you new?\"");
     textStrings.set("Buyer2", "\"I'm not worried about some newbie. Good luck trying to beat me in the auction.\"");
@@ -214,8 +219,15 @@ class MarketGame {
       if(b.LEAVE) CURRENT_SCREEN = 5;
       
       if(!MORN_TALK) {
-        if((INTRO && TEXTSTRING < b.INTRO_NUM) || (!INTRO && TEXTSTRING < b.DAY_NUM)) 
-          TEXTSTRING++;
+        if((INTRO && TEXTSTRING < b.INTRO_NUM) || (!INTRO && TEXTSTRING < b.DAY_NUM)) {
+          if(TEXTSTRING == 10) TEXTSTRING = 12;
+          else if(TEXTSTRING == 9) {
+            int result = b.salesHappy(BOUGHT_PRICE);
+            if(result == 0) TEXTSTRING++;
+            else if(result == 1) TEXTSTRING+=2;
+          }
+          else TEXTSTRING++;
+        }
         else if(!RECEIVED_EARNINGS && ((INTRO && TEXTSTRING == b.INTRO_NUM) || TEXTSTRING == b.DAY_NUM)) {
           b.comp.balance += b.comp.earnings;
           RECEIVED_EARNINGS = true;
@@ -228,8 +240,16 @@ class MarketGame {
         }
       }
       else {
-        if(TEXTSTRING < b.DIALOGUE_NUM) 
-          TEXTSTRING++;
+        if(TEXTSTRING < b.DIALOGUE_NUM) {
+          if(TEXTSTRING == 17 || TEXTSTRING == 18) TEXTSTRING = 20;
+          else if(TEXTSTRING == 16) {
+             int result = b.qualityHappy(b.comp.TUNA_QUALITY);
+             if(result == 0) TEXTSTRING++;
+             else if(result == 1) TEXTSTRING+=2;
+             else TEXTSTRING+=3;
+          }
+          else TEXTSTRING++;
+        }
         else b.LEAVE = true;
       }
     }
@@ -271,7 +291,7 @@ class MarketGame {
              auction.totalReset();
            }
            auction.miniReset();
-           auction.buyerBid();
+           auction.buyerBid(tunas[SELECTED_TUNA].quality);
            timer.reset();
            if(auction.WIN) {
              //user buys the fish they chose SELECTED_TUNA
@@ -283,6 +303,7 @@ class MarketGame {
              }
              else {
                b.comp.buy(auction.YOUR_BID);
+               BOUGHT_PRICE = auction.YOUR_BID;
                AT_TUNA_MARKET = GAMESTART = false;
              }
            }
@@ -292,7 +313,6 @@ class MarketGame {
        else if(auction.WIN && keyCode == 32) {
          TEXTSTRING = b.DAY_NUM + 1;
          b.comp.restock(tunas[SELECTED_TUNA]);
-         println(b.comp.TUNA_AMOUNT + " " + b.comp.TUNA_QUALITY);
          ALLOW_INPUTS = false;
          CURRENT_SCREEN = 3;
        }
@@ -323,9 +343,6 @@ class MarketGame {
           AT_FISH_MARKET = true;
         }
       }
-      //else if(!AT_TUNA_MARKET) {
-        
-      //}
       else if(AT_TUNA_MARKET && !SHOW_BUYER) {
         for(int i = 0; i < tunas.length; i++) {
           if(tunas[i].mouseOver()) {
@@ -340,9 +357,10 @@ class MarketGame {
   private void displayText() {
     fill(10);
     if(CURRENT_SCREEN == 3) {
-      if(TEXTSTRING == b.INTRO_NUM || TEXTSTRING == b.DAY_NUM) {
+      if(TEXTSTRING == b.INTRO_NUM || TEXTSTRING == b.DAY_NUM || TEXTSTRING == 15) {
         textFont(regular_bold);
-        text(textStrings.get("Boss" + TEXTSTRING) + b.comp.earnings + " yen", 50, height*.8, width - 50, height*.2);
+        if(TEXTSTRING == 15) text(textStrings.get("Boss" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
+        else  text(textStrings.get("Boss" + TEXTSTRING) + b.comp.earnings + " yen", 50, height*.8, width - 50, height*.2);
       }
       else {
         textFont(regular);
@@ -364,6 +382,7 @@ class MarketGame {
         println(CUSTOMER_COUNT + " " + b.comp.earnings);
       }
     }
+    b.comp.makeEarnings(1000);
     STORE_CLOSE = true;
   }
   private void drawUI(boolean bool) {
@@ -417,7 +436,7 @@ class MarketGame {
     TEXTSTRING = b.INTRO_NUM + 1;
     CURRENT_SCREEN = 3;
     for(Tuna t : tunas)
-      t.reset();
+      t.reset(0, 0, 0);
     for(Customer c : customers)
       c.reset();
   }
@@ -497,12 +516,14 @@ class Auction{
     }
     if(DIGIT_ONE == 0) WRONG_INPUT = true;
   }
-  void buyerBid() {
+  void buyerBid(float q) {
     int result = round(random(0,100));
     if(result <= buyer.BID_CHANCE) {
       BUYER_BID = YOUR_BID + 100;
       buyer.BID_CHANCE-=pow(2,buyer.RATE);
-      buyer.RATE++;
+      println(buyer.BID_CHANCE);
+      if(q >= 2) buyer.RATE+=.3;
+      else buyer.RATE++;
     }
     if(BUYER_BID > YOUR_BID) HIGHEST_BID = BUYER_BID;
     else WIN = true;
@@ -655,8 +676,7 @@ class Person{
 }
 //-------------------------------------------------------------------------------------------------//
 class Buyer extends Person{
-  Float BID_CHANCE;
-  int RATE;
+  Float BID_CHANCE, RATE;
    Buyer() {
      name = "Boyr";
      DIALOGUE_NUM = 4;
@@ -667,7 +687,7 @@ class Buyer extends Person{
      LOCX = img.width;
      fixTransparency();
      BID_CHANCE = 100.0;
-     RATE = 1;
+     RATE = 1.0;
    }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -682,16 +702,41 @@ class Boss extends Person{
     img = loadImage("newboss.jpg");
     img.resize(450,600);
     LOCX = -img.width;
-    DIALOGUE_NUM = 13;
+    DIALOGUE_NUM = 21;
     INTRO_NUM = 4;
-    DAY_NUM = 10;
-    AFTER_NUM = 13;
+    DAY_NUM = 12;
+    AFTER_NUM = 21;
     LEAVE = false;
     comp = new Company(n);
     fixTransparency();
   }
-  void changeHappiness() {
-     
+  boolean checkHappy() {
+   if(happiness < 40) return false;
+   return true; 
+  }
+  int salesHappy(int c) {
+    if(c > comp.earnings) {
+      happiness-=1;
+      return 0;
+    }
+    else {
+      happiness+=2;
+      return 1;
+    }
+  }
+  int qualityHappy(float q) {
+    if(q < 2) {
+      happiness-=1;
+      return 0;
+    }
+    else if(q >= 2 && q < 4) {
+      happiness+=2;
+      return 1;
+    }
+    else {
+      happiness+=3;
+      return 2;
+    }
   }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -699,7 +744,6 @@ class Customer{
   int prefQuality, qCost, buyAmount, spend;
   Customer() {
     prefQuality = abs(round(randomGaussian() * 2));
-    println(prefQuality);
     if(0 <= prefQuality && prefQuality < 2) qCost = 10;
     else if(2 <= prefQuality && prefQuality < 4) qCost = 15;
     else qCost = 20;
@@ -715,7 +759,6 @@ class Customer{
   }
   void reset() {
     prefQuality = abs(round(randomGaussian() * 2));
-    println(prefQuality);
     if(0 <= prefQuality && prefQuality < 2) qCost = 10;
     else if(2 <= prefQuality && prefQuality < 4) qCost = 15;
     else qCost = 20; 
@@ -732,8 +775,8 @@ class Tuna{
   
   Tuna(PVector l, int s, String lc) {
     fat = round(random(3,20));
-    weight = abs(round(randomGaussian() * 150 + fat * 5));
-    quality = abs(randomGaussian() * 2);
+    weight = abs(int(randomGaussian() * 150 + fat * 5));
+    quality = abs(randomGaussian() * 2) + fat/20;
     LOOK_AT = false;
     size = s;
     loc = l;
@@ -767,11 +810,14 @@ class Tuna{
       return true;
     return false;
   }
-  void reset() {
+  void reset(int f, int w, int q) {
     fat = round(random(3,20));
     weight = abs(round(randomGaussian() * 150 + fat * 5));
     quality = abs(randomGaussian() * 2);
     LOOK_AT = false;
+  }
+  String print() {
+     return "Weight: " + weight + " Fat: " + fat + " Quality: " + quality;
   }
 }
 //-------------------------------------------------------------------------------------------------//
