@@ -1,3 +1,4 @@
+//add something to show boss happiness
 MarketGame mg;
 
 void setup() {
@@ -17,7 +18,7 @@ void mouseClicked() {
 //-------------------------------------------------------------------------------------------------//
 //↑ ↓ → ←
 class MarketGame {
-  int CURRENT_SCREEN, DAY, TEXTSTRING, SELECTED_TUNA, CUSTOMER_COUNT, BOUGHT_PRICE;
+  int CURRENT_SCREEN, DAY, TEXTSTRING, SELECTED_TUNA, CUSTOMER_COUNT, BOUGHT_PRICE, salNum, mackNum, squidNum;
   IntList userInput;
   StringList combos, locations;
   StringDict textStrings;
@@ -33,7 +34,7 @@ class MarketGame {
   Customer[] customers = new Customer[100];
   Timer timer;
   MarketGame() {
-    SELECTED_TUNA = CURRENT_SCREEN = 0;
+    salNum = mackNum = squidNum = SELECTED_TUNA = CURRENT_SCREEN = 0;
     TEXTSTRING = DAY = 1;
     BOUGHT_PRICE = 0;
     userInput = new IntList();
@@ -77,6 +78,7 @@ class MarketGame {
     }
     for(int j = 0; j < customers.length; j++) 
       customers[j] = new Customer();
+    notepad.setNums(b.reqSal, b.reqMack, b.reqSquid);
   }
   private void addStrings() {
     textStrings.set("Boss1", "\"Welcome, new employee.\"");
@@ -198,12 +200,13 @@ class MarketGame {
     }
     else if(AT_FISH_MARKET){
       market.drawMarket();
+      drawEnter("buy");
     }
   }
   private void LoadingScreen() {
     background(bg1);
     if(!STORE_CLOSE) drawLoading();
-    else drawEnter();
+    else drawEnter("continue");
   }
   private void ANewDayScreen() {
     //moon going down and sun coming up animation  
@@ -257,8 +260,17 @@ class MarketGame {
     if(CURRENT_SCREEN == 4) {
        if(!GAMESTART && (keyCode == 78 || keyCode == 110)) 
          notepad.openClose();
-       else if(AT_FISH_MARKET && keyCode == 8) {
-         AT_FISH_MARKET = false;
+       else if(AT_FISH_MARKET) {
+         if(keyCode == 8)
+           AT_FISH_MARKET = false;
+         else if(keyCode == 10) {
+          //buy all fish here
+          b.comp.buy(market.TOTAL);
+          salNum = market.SALMON_QUANT;
+          mackNum = market.MACKEREL_QUANT;
+          squidNum = market.SQUID_QUANT;
+          AT_FISH_MARKET = false;
+         }
        }
        else if(!GAMESTART && AT_TUNA_MARKET && SHOW_BUYER && keyCode == 32) {
          if((INTRO && TEXTSTRING < auction.buyer.INTRO_NUM) || (!INTRO && TEXTSTRING < auction.buyer.DAY_NUM)) {
@@ -313,6 +325,7 @@ class MarketGame {
        else if(auction.WIN && keyCode == 32) {
          TEXTSTRING = b.DAY_NUM + 1;
          b.comp.restock(tunas[SELECTED_TUNA]);
+         b.otherFishHappy(salNum, mackNum, squidNum);
          ALLOW_INPUTS = false;
          CURRENT_SCREEN = 3;
        }
@@ -339,8 +352,11 @@ class MarketGame {
       if(!AT_TUNA_MARKET) {
         if(auction.mouseOver() && !auction.WIN)
           SHOW_BUYER = AT_TUNA_MARKET = true;
-        else if(market.mouseOver()) {
+        else if(market.mouseOver() && !AT_FISH_MARKET) {
           AT_FISH_MARKET = true;
+        }
+        else if(AT_FISH_MARKET) {
+          market.addFish(); 
         }
       }
       else if(AT_TUNA_MARKET && !SHOW_BUYER) {
@@ -416,11 +432,11 @@ class MarketGame {
     fill(10, millis() % 510);
     text("Press SPACEBAR to continue", width*.8, height*.95);
   }
-  private void drawEnter() {
+  private void drawEnter(String s) {
     textFont(regular_bold);
     textSize(40);
     fill(240, millis() % 1020);
-    text("Press Enter to continue", width*.8, height*.95);
+    text("Press Enter to " + s, width*.8, height*.95);
   }
   private void drawLoading() {
     textFont(regular_bold);
@@ -430,6 +446,7 @@ class MarketGame {
   }
   private void nextDay() {
     DAY++;
+    salNum = squidNum = mackNum = 0;
     if(INTRO) INTRO = false;
     STORE_CLOSE = auction.WIN = RECEIVED_EARNINGS = b.LEAVE = MORN_TALK = false;
     auction.totalReset();
@@ -439,6 +456,7 @@ class MarketGame {
       t.reset(0, 0, 0);
     for(Customer c : customers)
       c.reset();
+    b.reset();
   }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -547,11 +565,25 @@ class Auction{
 //-------------------------------------------------------------------------------------------------//
 class Market{
   PImage stallbase, stallbeam;
-  int SALMON_PRICE, MACKEREL_PRICE, SQUID_PRICE;
+  int SALMON_PRICE, MACKEREL_PRICE, SQUID_PRICE, TOTAL;
+  int SALMON_QUANT, MACKEREL_QUANT, SQUID_QUANT;
+  PFont arial;
+  SmallButton salmin, salplus, mackmin, mackplus, squimin, squiplus;
   Market() {
     stallbase = loadImage("woodcrate.jpg");
     stallbeam = loadImage("woodbeam.jpg");
+    arial = createFont("ARIAL.TTF", 25);
     stallbeam.resize(50,200);
+    salmin = new SmallButton("-", new PVector(385, 575), 100, 100, 200);
+    salplus = new SmallButton("+", new PVector(465, 575), 200, 100, 100);
+    mackmin = new SmallButton("-", new PVector(585, 575), 100, 100, 200);
+    mackplus = new SmallButton("+", new PVector(665, 575), 200, 100, 100);
+    squimin = new SmallButton("-", new PVector(785, 575), 100, 100, 200);
+    squiplus = new SmallButton("+", new PVector(865, 575), 200, 100, 100);
+    SALMON_QUANT = MACKEREL_QUANT = SQUID_QUANT = 0;
+    SALMON_PRICE = 500;
+    MACKEREL_PRICE = 200;
+    SQUID_PRICE = 300;
   }
   void displayIcon() {
     image(stallbeam, 200, 200);
@@ -573,21 +605,50 @@ class Market{
     rectMode(CORNER);
     fill(10,200);
     rect(0, 0, width, height);
+    fill(200);
+    rect(200, 150, 800, 400);
+    fill(150);
+    rect(200, 550, 800, 100);
     //close up of fish in their containers
+    textFont(arial);
+    salmin.draw();
+    salplus.draw();
+    mackmin.draw();
+    mackplus.draw();
+    squimin.draw();
+    squiplus.draw();
+    fill(10);
+    text("Salmon: " + SALMON_QUANT, 420, 625);
+    text("Mackerel: " + MACKEREL_QUANT, 620, 625);
+    text("Squid: " + SQUID_QUANT, 820, 625);
+    fill(240);
+    textSize(30);
+    text("Total: " + TOTAL, width/2, 700);
   }
-  //need to add button for buying multiple fish
-  
+  void addFish() {
+    if(salmin.mouseOver() && SALMON_QUANT > 0) SALMON_QUANT--;
+    else if(salplus.mouseOver()) SALMON_QUANT++;
+    else if(mackmin.mouseOver() && MACKEREL_QUANT > 0) MACKEREL_QUANT--;
+    else if(mackplus.mouseOver()) MACKEREL_QUANT++;
+    else if(squimin.mouseOver() && SQUID_QUANT > 0) SQUID_QUANT--;
+    else if(squiplus.mouseOver()) SQUID_QUANT++;
+    TOTAL = SALMON_QUANT*SALMON_PRICE + MACKEREL_QUANT*MACKEREL_PRICE + SQUID_QUANT*SQUID_PRICE;
+  }
+  void reset() {
+    TOTAL = SALMON_QUANT = MACKEREL_QUANT = SQUID_QUANT = 0;
+  }
   boolean mouseOver() {
     if(mouseX > 100 && mouseX < 600 && mouseY > 100 && mouseY < 600)
       return true;
     return false;
-}
+  }
 }
 //-------------------------------------------------------------------------------------------------//
 class Notes{
   PImage note;
   PVector loc;
-  boolean OPEN_UP;
+  boolean OPEN_UP, SALMON_GOOD, MACK_GOOD, SQUID_GOOD;
+  int sal, mac, squ;
   Notes() {
     //800,600
     note = loadImage("notepad.jpg");
@@ -602,8 +663,14 @@ class Notes{
       imageMode(CENTER);
       image(note, loc.x, loc.y);
       imageMode(CORNER);
+      fill(10);
+      textSize(20);
+      text("Buy " + sal + " salmon", 650, 250);
+      text("Buy " + mac + " mackerel", 650, 300);
+      text("Buy " + squ + " squid", 650, 350);
     }
     else {
+      //need to make icon
       fill(100,100,0);
       rect(width- 50, 10, 20, 30);
     }
@@ -612,6 +679,11 @@ class Notes{
     if(!OPEN_UP)
       OPEN_UP = true;
     else OPEN_UP = false;
+  }
+  void setNums(int sa, int m, int sq) {
+    sal = sa;
+    mac = m;
+    squ = sq;
   }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -695,7 +767,7 @@ class Buyer extends Person{
 class Boss extends Person{
   Float happiness;
   Company comp;
-  int AFTER_NUM;
+  int AFTER_NUM, reqSal, reqMack, reqSquid;
   Boss(String n) {
     name = "Boss";
     happiness = 70.0;
@@ -709,10 +781,21 @@ class Boss extends Person{
     LEAVE = false;
     comp = new Company(n);
     fixTransparency();
+    reqSal = int(random(0,4));
+    reqMack = int(random(0,4));
+    reqSquid = int(random(0,4));
   }
   boolean checkHappy() {
    if(happiness < 40) return false;
    return true; 
+  }
+  void otherFishHappy(int sa, int m, int sq) {
+    if(sa == reqSal) happiness+=.3;
+    else happiness -=.3;
+    if(m == reqMack) happiness+=.3;
+    else happiness -=.3;
+    if(sq == reqSquid) happiness+=.3;
+    else happiness -=.3;
   }
   int salesHappy(int c) {
     if(c > comp.earnings) {
@@ -737,6 +820,11 @@ class Boss extends Person{
       happiness+=3;
       return 2;
     }
+  }
+  void reset() {
+    reqSal = int(random(0,4));
+    reqMack = int(random(0,4));
+    reqSquid = int(random(0,4));
   }
 }
 //-------------------------------------------------------------------------------------------------//
@@ -830,8 +918,8 @@ class Button{
   Button(String t, PVector l, int r, int g, int b) {
     text = t;
     location = l;
-    col = color(r,g,b);
-    over = color(r+100,g+100,b+100);
+    col = color(r, g, b);
+    over = color(r+100, g+100, b+100);
     pf = createFont("BornAddict.ttf", 25);
   }
   void draw() {
@@ -868,6 +956,39 @@ class Button{
   boolean mouseOver() {
     if(mouseX >= location.x && mouseX <= location.x + 100 
     && mouseY >= location.y-20 && mouseY <= location.y + 20) 
+      return true;
+    return false;
+  }
+}
+//-------------------------------------------------------------------------------------------------//
+class SmallButton{
+  String text;
+  PVector location;
+  color col, over;
+  int size;
+  SmallButton(String t, PVector l, int r, int g, int b) {
+    text = t;
+    location = l;
+    col = color(r, g, b);
+    over = color(r+100, g+100, b+100);
+    size = 30;
+  }
+  void draw() {
+    if(mouseX >= location.x && mouseX <= location.x + size 
+    && mouseY >= location.y && mouseY <= location.y + size)
+      fill(over);
+    else
+      fill(col);
+    stroke(col);
+    strokeWeight(4);
+    ellipse(location.x, location.y, size, size);
+    fill(240);
+    textAlign(CENTER);
+    text(text, location.x, location.y+10);
+  }
+  boolean mouseOver() {
+    if(mouseX >= location.x && mouseX <= location.x + size 
+    && mouseY >= location.y && mouseY <= location.y + size) 
       return true;
     return false;
   }
