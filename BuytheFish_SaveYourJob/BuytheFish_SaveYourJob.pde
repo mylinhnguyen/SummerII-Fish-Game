@@ -459,6 +459,7 @@ class MarketGame {
     for(Customer c : customers)
       c.reset();
     b.reset();
+    market.reset();
   }
 }
 //-------------------------------------------------------------------------------------------------//

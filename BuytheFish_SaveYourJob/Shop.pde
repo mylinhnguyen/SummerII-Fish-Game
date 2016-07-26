@@ -104,7 +104,7 @@ class Auction{
 }
 //-------------------------------------------------------------------------------------------------//
 class Market{
-  PImage stallbase, stallbeam;
+  PImage stallbase, stallbeam, stallmarket;
   int SALMON_PRICE, MACKEREL_PRICE, SQUID_PRICE, TOTAL;
   int SALMON_QUANT, MACKEREL_QUANT, SQUID_QUANT;
   PFont arial;
@@ -112,6 +112,7 @@ class Market{
   Market() {
     stallbase = loadImage("woodcrate.jpg");
     stallbeam = loadImage("woodbeam.jpg");
+    stallmarket = loadImage("fishmarket.jpg");
     arial = createFont("ARIAL.TTF", 25);
     stallbeam.resize(50,200);
     salmin = new SmallButton("-", new PVector(385, 575), 100, 100, 200);
@@ -145,10 +146,7 @@ class Market{
     rectMode(CORNER);
     fill(10,200);
     rect(0, 0, width, height);
-    fill(200);
-    rect(200, 150, 800, 400);
-    fill(150);
-    rect(200, 550, 800, 100);
+    image(stallmarket, 200, 150);
     //close up of fish in their containers
     textFont(arial);
     salmin.draw();
@@ -193,15 +191,21 @@ class Tuna{
   String locCaught;
   PShape tuna, crown;
   Tuna(PVector l, String lc) {
-    fat = round(random(3,20));
-    weight = abs(int(randomGaussian() * 150 + fat * 5));
-    quality = abs(randomGaussian() * 2) + fat/20;
+    Float i = random(0,1);
+    if(i < 0.05) {
+      KING = true;
+      weight = abs(int(random(200,300)));
+      quality = random(3,5);
+    }
+    else {
+      KING = false;
+      fat = round(random(3,20));
+      weight = abs(int(randomGaussian() * 100 + fat * 5))+100;
+      quality = abs(randomGaussian() * 2) + fat/20;
+    }
     LOOK_AT = false;
     loc = l;
     locCaught = lc;
-    Float i = random(0,1);
-    if(i < 0.05) KING = true;
-    else KING = false;
     tuna = createShape();
     crown = createShape();
     makeShape();
@@ -244,8 +248,9 @@ class Tuna{
     noStroke();
     if(!LOOK_AT) {
       shape(tuna, 0, 0);
+      if(KING) shape(crown, 0, 0);
       if(this.mouseOver()) {
-        fill(240, 200);
+        fill(230,210);
         if(mouseX+200 > width) {
           rect(mouseX - 200, mouseY, 200, 100);
           fill(10);
@@ -302,7 +307,8 @@ class Notes{
       imageMode(CORNER);
       fill(10);
       textSize(20);
-      text(newspaper.news.get("Tuna1") + newsLoc, 250, 250, 300, 300);
+      if(HAVE_NEWSPAPER)
+        text(newspaper.news.get("Tuna1") + newsLoc, 250, 250, 300, 300);
       text("Buy " + sal + " salmon", 650, 250);
       text("Buy " + mac + " mackerel", 650, 300);
       text("Buy " + squ + " squid", 650, 350);
