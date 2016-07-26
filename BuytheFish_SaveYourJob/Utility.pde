@@ -1,5 +1,36 @@
 //Button, SmallButton, Timer
 //-------------------------------------------------------------------------------------------------//
+class GameMenu{
+  Button load, save;
+  Boolean LOAD, SAVE;
+  Button[] buttons = new Button[2];
+  GameMenu() {
+    load = new Button("Load", new PVector(530, 300), 46, 95, 230);
+    save = new Button("Save", new PVector(530, 400), 250, 180, 0);
+    buttons[0] = load;
+    buttons[1] = save;
+    LOAD = SAVE = false;
+  }
+  void display() {
+    noStroke();
+    rectMode(CORNER);
+    fill(10,150);
+    rect(0, 0, width, height);
+    if(!LOAD && !SAVE) {
+      fill(10);
+      rect(450, 225, 300, 250);
+      for(Button b : buttons)
+        b.draw();
+    }
+    else if(LOAD && !SAVE) {
+      //load game
+    }
+    else if(!LOAD && SAVE) {
+      //save game
+    }
+  }
+}
+//-------------------------------------------------------------------------------------------------//
 //Would you press the button
 class Button{
   String text;
@@ -14,8 +45,7 @@ class Button{
     pf = createFont("BornAddict.ttf", 25);
   }
   void draw() {
-    if(mouseX >= location.x && mouseX <= location.x + 100 
-    && mouseY >= location.y-20 && mouseY <= location.y + 20)
+    if(mouseOver())
       fill(over);
     else
       fill(col);
@@ -65,8 +95,7 @@ class SmallButton{
     size = 30;
   }
   void draw() {
-    if(mouseX >= location.x && mouseX <= location.x + size 
-    && mouseY >= location.y && mouseY <= location.y + size)
+    if(mouseOver())
       fill(over);
     else
       fill(col);
@@ -78,8 +107,8 @@ class SmallButton{
     text(text, location.x, location.y+10);
   }
   boolean mouseOver() {
-    if(mouseX >= location.x && mouseX <= location.x + size 
-    && mouseY >= location.y && mouseY <= location.y + size) 
+    if(mouseX >= location.x-size/2 && mouseX <= location.x + size/2 
+    && mouseY >= location.y-size/2 && mouseY <= location.y + size/2) 
       return true;
     return false;
   }

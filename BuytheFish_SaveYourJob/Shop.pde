@@ -115,12 +115,12 @@ class Market{
     stallmarket = loadImage("fishmarket.jpg");
     arial = createFont("ARIAL.TTF", 25);
     stallbeam.resize(50,200);
-    salmin = new SmallButton("-", new PVector(385, 575), 100, 100, 200);
-    salplus = new SmallButton("+", new PVector(465, 575), 200, 100, 100);
-    mackmin = new SmallButton("-", new PVector(585, 575), 100, 100, 200);
+    salmin = new SmallButton("-", new PVector(300, 575), 100, 100, 200);
+    salplus = new SmallButton("+", new PVector(400, 575), 200, 100, 100);
+    mackmin = new SmallButton("-", new PVector(565, 575), 100, 100, 200);
     mackplus = new SmallButton("+", new PVector(665, 575), 200, 100, 100);
-    squimin = new SmallButton("-", new PVector(785, 575), 100, 100, 200);
-    squiplus = new SmallButton("+", new PVector(865, 575), 200, 100, 100);
+    squimin = new SmallButton("-", new PVector(820, 575), 100, 100, 200);
+    squiplus = new SmallButton("+", new PVector(920, 575), 200, 100, 100);
     SALMON_QUANT = MACKEREL_QUANT = SQUID_QUANT = 0;
     SALMON_PRICE = 500;
     MACKEREL_PRICE = 200;
@@ -147,7 +147,6 @@ class Market{
     fill(10,200);
     rect(0, 0, width, height);
     image(stallmarket, 200, 150);
-    //close up of fish in their containers
     textFont(arial);
     salmin.draw();
     salplus.draw();
@@ -156,9 +155,9 @@ class Market{
     squimin.draw();
     squiplus.draw();
     fill(10);
-    text("Salmon: " + SALMON_QUANT, 420, 625);
+    text("Salmon: " + SALMON_QUANT, 350, 625);
     text("Mackerel: " + MACKEREL_QUANT, 620, 625);
-    text("Squid: " + SQUID_QUANT, 820, 625);
+    text("Squid: " + SQUID_QUANT, 870, 625);
     fill(240);
     textSize(30);
     text("Total: " + TOTAL, width/2, 700);

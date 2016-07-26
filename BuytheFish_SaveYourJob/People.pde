@@ -1,5 +1,23 @@
 //People, Buyer, Boss, Customer
 //-------------------------------------------------------------------------------------------------//
+class User{
+  IntList userInput;
+  int SELECTED_TUNA, BOUGHT_PRICE, OTHER_PRICE, salNum, mackNum, squidNum;
+  User() {
+    userInput = new IntList(); 
+    SELECTED_TUNA = BOUGHT_PRICE = OTHER_PRICE = salNum = mackNum = squidNum = 0;
+  }
+  void buyFish(int s, int m, int sq, int t) {
+    salNum = s;
+    mackNum = m;
+    squidNum = sq;
+    OTHER_PRICE = t;
+  }
+  void reset() {
+    SELECTED_TUNA = BOUGHT_PRICE = OTHER_PRICE = salNum = mackNum = squidNum = 0; 
+  }
+}
+//-------------------------------------------------------------------------------------------------//
 class Person{
   String name;
   int LOCX, DIALOGUE_NUM, INTRO_NUM, DAY_NUM;
@@ -68,6 +86,46 @@ class Boss extends Person{
     reqSal = int(random(0,4));
     reqMack = int(random(0,4));
     reqSquid = int(random(0,4));
+  }
+  void displayHappy() {
+    stroke(10);
+    if(happiness >= 85.0) {
+      fill(0,250,0);
+      ellipse(1120, 50, 50, 50);
+      fill(10);
+      ellipse(1110, 42, 5, 5);
+      ellipse(1130, 42, 5, 5);
+      noFill();
+      curve(1105, 20 ,1110, 57, 1130, 57, 1135, 20);
+    }
+    else if(happiness < 85.0 && happiness >=70) {
+      fill(250,250,0);
+      ellipse(1120, 50, 50, 50);
+      fill(10);
+      ellipse(1110, 42, 5, 5);
+      ellipse(1130, 42, 5, 5);
+      line(1105, 55, 1135, 55);
+    }
+    else if(happiness < 70 && happiness >= 50) {
+      fill(255,200,0);
+      ellipse(1120, 50, 50, 50);
+      fill(10);
+      ellipse(1110, 42, 5, 5);
+      ellipse(1130, 42, 5, 5);
+      noFill();
+      curve(1105, 90 ,1110, 60, 1130, 60, 1135, 90);
+    }
+    else {
+      fill(250,0,0);
+      ellipse(1120, 50, 50, 50);
+      fill(10);
+      ellipse(1110, 42, 5, 5);
+      ellipse(1130, 42, 5, 5);
+      line(1112, 35, 1103, 30);
+      line(1128, 35, 1137, 30);
+      noFill();
+      curve(1105, 90 ,1110, 60, 1130, 60, 1135, 90);
+    }
   }
   boolean checkHappy() {
    if(happiness < 40) return false;
