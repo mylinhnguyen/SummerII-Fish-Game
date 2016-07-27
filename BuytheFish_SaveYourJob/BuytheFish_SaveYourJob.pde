@@ -343,13 +343,10 @@ class MarketGame {
   //mouseClicked
   void mouseInput() {
     if(MENU_OPEN) {
-      if(gm.load.mouseOver()) {
-        gm.LOAD = true;
-        gm.SAVE = false;
-      }
-      else if(gm.save.mouseOver()) {
-        gm.saveGame();
-      }
+      if(gm.load.mouseOver())  gm.LOAD = true;
+      else if(gm.save.mouseOver())  gm.SAVE = true;
+      if(gm.yes.mouseOver() && gm.SAVE) gm.saveGame();
+      else if(gm.no.mouseOver() && gm.SAVE) gm.SAVE = false;
     }
     if(CURRENT_SCREEN == 0) {
       if(start.mouseOver())

@@ -2,16 +2,23 @@
 //-------------------------------------------------------------------------------------------------//
 class GameMenu {
   Button load, save;
+  SmallButton yes, no;
   Boolean LOAD, SAVE;
-  JSONObject js;
+  JSONObject js, ljs;
   Button[] buttons = new Button[2];
+  SmallButton[] sbuttons = new SmallButton[2];
   GameMenu() {
     load = new Button("Load", new PVector(530, 300), 46, 95, 230);
     save = new Button("Save", new PVector(530, 400), 250, 180, 0);
+    yes = new SmallButton("Y", new PVector(520, 400), 250, 10, 10);
+    no = new SmallButton("N", new PVector(680, 400), 10, 10, 250);
     buttons[0] = load;
     buttons[1] = save;
-    LOAD = SAVE = false;
+    sbuttons[0] = yes;
+    sbuttons[1] = no;
+    LOAD = SAVE = false;  
     js = new JSONObject();
+    ljs = loadJSONObject("save1.json");
   }
   void display() {
     noStroke();
@@ -26,11 +33,31 @@ class GameMenu {
     }
     else if(LOAD && !SAVE) {
       //load game 
+      //ask if want to load file if one is present
+      //else say no file to load
+      fill(200);
+      rect(450, 300, 300, 120);
+      fill(10);
+      textSize(20);
+      text("Would you like to load an existing game?", 470, 300, 280, 100);
+      for(SmallButton sb : sbuttons)
+        sb.draw();
     }
     else if(!LOAD && SAVE) {
       //save screen
       //ask if want to overwrite if file exists
+      //else saves
+      fill(200);
+      rect(450, 300, 300, 120);
+      fill(10);
+      textSize(20);
+      text("Would you like to save the game/ overwrite an existing save?", 470, 300, 280, 100);
+      for(SmallButton sb : sbuttons)
+        sb.draw();
     }
+  }
+  void loadGame() {
+    
   }
   void saveGame() {
     //save game as json object
@@ -154,6 +181,7 @@ class SmallButton{
     ellipse(location.x, location.y, size, size);
     fill(240);
     textAlign(CENTER);
+    textSize(20);
     text(text, location.x, location.y+10);
   }
   boolean mouseOver() {
