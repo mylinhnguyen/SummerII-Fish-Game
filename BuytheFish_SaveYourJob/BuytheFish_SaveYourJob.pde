@@ -347,8 +347,10 @@ class MarketGame {
       else if(gm.save.mouseOver())  gm.SAVE = true;
       if(gm.yes.mouseOver() && gm.SAVE) gm.saveGame();
       else if(gm.no.mouseOver() && gm.SAVE) gm.SAVE = false;
+      if(gm.yes.mouseOver() && gm.LOAD) gm.loadGame();
+      else if(gm.no.mouseOver() && gm.LOAD) gm.LOAD = false;
     }
-    if(CURRENT_SCREEN == 0) {
+    if(CURRENT_SCREEN == 0 && !MENU_OPEN) {
       if(start.mouseOver())
         CURRENT_SCREEN = 3;
       else if(info.mouseOver())
@@ -357,7 +359,7 @@ class MarketGame {
         exit();
       timer.reset();
     }
-    if(CURRENT_SCREEN == 4) {
+    if(CURRENT_SCREEN == 4 && !MENU_OPEN) {
       if(!AT_TUNA_MARKET) {
         if(auction.mouseOver() && !auction.WIN)
           SHOW_BUYER = AT_TUNA_MARKET = true;

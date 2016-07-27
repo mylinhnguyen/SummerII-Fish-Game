@@ -57,7 +57,50 @@ class GameMenu {
     }
   }
   void loadGame() {
-    
+    if(ljs.isNull("day")) LOAD = false;
+    else {
+      mg.DAY = ljs.getInt("day");
+      mg.CURRENT_SCREEN = ljs.getInt("currentScreen");
+      mg.TEXTSTRING = ljs.getInt("textstring");
+      mg.CUSTOMER_COUNT = ljs.getInt("customerCount");
+      mg.MORN_TALK = ljs.getBoolean("mornTalk");
+      mg.GAMESTART = ljs.getBoolean("gamestart");
+      mg.ALLOW_INPUTS = ljs.getBoolean("allowInputs");
+      mg.COUNTED = ljs.getBoolean("counted");
+      mg.INTRO = ljs.getBoolean("intro");
+      mg.RECEIVED_EARNINGS = ljs.getBoolean("receivedEarnings");
+      mg.AT_TUNA_MARKET = ljs.getBoolean("atTunaMarket");
+      mg.AT_FISH_MARKET = ljs.getBoolean("atFishMarket");
+      mg.SHOW_BUYER = ljs.getBoolean("showBuyer");
+      mg.NEW_DAY_ANIM = ljs.getBoolean("newDayAnim");
+      mg.STORE_CLOSE = ljs.getBoolean("storeClose");
+      mg.user.SELECTED_TUNA = ljs.getInt("selTuna");
+      mg.user.BOUGHT_PRICE = ljs.getInt("boughtPrice");
+      mg.user.OTHER_PRICE = ljs.getInt("otherPrice");
+      mg.user.salNum = ljs.getInt("salnum");
+      mg.user.mackNum = ljs.getInt("macknum");
+      mg.user.squidNum = ljs.getInt("squidnum");
+      mg.b.reqSal = ljs.getInt("reqsal");
+      mg.b.reqMack = ljs.getInt("reqmack");
+      mg.b.reqSquid = ljs.getInt("reqsquid");
+      mg.b.happiness = ljs.getFloat("happy");
+      mg.b.comp.TUNA_AMOUNT = ljs.getFloat("tamount");
+      mg.b.comp.TUNA_QUALITY = ljs.getFloat("tquality");
+      mg.b.comp.balance = ljs.getInt("balance");
+      mg.b.comp.earnings = ljs.getInt("earnings");
+      mg.notepad.SALMON_GOOD = ljs.getBoolean("sgood");
+      mg.notepad.MACK_GOOD = ljs.getBoolean("mgood");
+      mg.notepad.SQUID_GOOD = ljs.getBoolean("sqgood");
+      mg.notepad.HAVE_NEWSPAPER = ljs.getBoolean("havenews");
+      mg.notepad.sal = ljs.getInt("nsal");
+      mg.notepad.mac = ljs.getInt("nmac");
+      mg.notepad.squ = ljs.getInt("nsqu");
+      mg.auction.WIN= ljs.getBoolean("auctionwin");
+      mg.market.SALMON_PRICE = ljs.getInt("marketsalp");
+      mg.market.MACKEREL_PRICE = ljs.getInt("marketmacp");
+      mg.market.SQUID_PRICE = ljs.getInt("marketsqup");
+      mg.MENU_OPEN = LOAD = false;
+    }
   }
   void saveGame() {
     //save game as json object
@@ -76,7 +119,6 @@ class GameMenu {
     js.setBoolean("showBuyer", mg.SHOW_BUYER);
     js.setBoolean("newDayAnim", mg.NEW_DAY_ANIM);
     js.setBoolean("storeClose", mg.STORE_CLOSE);
-    js.setBoolean("menuOpen", mg.MENU_OPEN);
     js.setInt("selTuna", mg.user.SELECTED_TUNA);
     js.setInt("boughtPrice", mg.user.BOUGHT_PRICE);
     js.setInt("otherPrice", mg.user.OTHER_PRICE);
@@ -85,7 +127,7 @@ class GameMenu {
     js.setInt("squidnum", mg.user.squidNum);
     js.setInt("reqsal", mg.b.reqSal);
     js.setInt("reqmack", mg.b.reqMack);
-    js.setInt("reaquid", mg.b.reqSquid);
+    js.setInt("reqsquid", mg.b.reqSquid);
     js.setFloat("happy", mg.b.happiness);
     js.setFloat("tamount", mg.b.comp.TUNA_AMOUNT);
     js.setFloat("tquality", mg.b.comp.TUNA_QUALITY);
@@ -102,9 +144,8 @@ class GameMenu {
     js.setInt("marketsalp", mg.market.SALMON_PRICE);
     js.setInt("marketmacp", mg.market.MACKEREL_PRICE);
     js.setInt("marketsqup", mg.market.SQUID_PRICE);
-     
-    saveJSONObject(js, "data/save1.json");
-    println("saved game"); 
+    saveJSONObject(js, "data/save1.json"); 
+    SAVE = false;
   }
 }
 //-------------------------------------------------------------------------------------------------//
