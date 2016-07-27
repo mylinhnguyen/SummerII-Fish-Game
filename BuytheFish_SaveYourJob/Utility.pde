@@ -1,8 +1,9 @@
 //Button, SmallButton, Timer
 //-------------------------------------------------------------------------------------------------//
-class GameMenu{
+class GameMenu {
   Button load, save;
   Boolean LOAD, SAVE;
+  JSONObject js;
   Button[] buttons = new Button[2];
   GameMenu() {
     load = new Button("Load", new PVector(530, 300), 46, 95, 230);
@@ -10,6 +11,7 @@ class GameMenu{
     buttons[0] = load;
     buttons[1] = save;
     LOAD = SAVE = false;
+    js = new JSONObject();
   }
   void display() {
     noStroke();
@@ -23,11 +25,59 @@ class GameMenu{
         b.draw();
     }
     else if(LOAD && !SAVE) {
-      //load game
+      //load game 
     }
     else if(!LOAD && SAVE) {
-      //save game
+      //save screen
+      //ask if want to overwrite if file exists
     }
+  }
+  void saveGame() {
+    //save game as json object
+    js.setInt("day", mg.DAY);
+    js.setInt("currentScreen", mg.CURRENT_SCREEN);
+    js.setInt("textstring", mg.TEXTSTRING);
+    js.setInt("customerCount", mg.CUSTOMER_COUNT);
+    js.setBoolean("mornTalk", mg.MORN_TALK);
+    js.setBoolean("gamestart", mg.GAMESTART);
+    js.setBoolean("allowInputs", mg.ALLOW_INPUTS);
+    js.setBoolean("counted", mg.COUNTED);
+    js.setBoolean("intro", mg.INTRO);
+    js.setBoolean("receivedEarnings", mg.RECEIVED_EARNINGS);
+    js.setBoolean("atTunaMarket", mg.AT_TUNA_MARKET);
+    js.setBoolean("atFishMarket", mg.AT_FISH_MARKET);
+    js.setBoolean("showBuyer", mg.SHOW_BUYER);
+    js.setBoolean("newDayAnim", mg.NEW_DAY_ANIM);
+    js.setBoolean("storeClose", mg.STORE_CLOSE);
+    js.setBoolean("menuOpen", mg.MENU_OPEN);
+    js.setInt("selTuna", mg.user.SELECTED_TUNA);
+    js.setInt("boughtPrice", mg.user.BOUGHT_PRICE);
+    js.setInt("otherPrice", mg.user.OTHER_PRICE);
+    js.setInt("salnum", mg.user.salNum);
+    js.setInt("macknum", mg.user.mackNum);
+    js.setInt("squidnum", mg.user.squidNum);
+    js.setInt("reqsal", mg.b.reqSal);
+    js.setInt("reqmack", mg.b.reqMack);
+    js.setInt("reaquid", mg.b.reqSquid);
+    js.setFloat("happy", mg.b.happiness);
+    js.setFloat("tamount", mg.b.comp.TUNA_AMOUNT);
+    js.setFloat("tquality", mg.b.comp.TUNA_QUALITY);
+    js.setInt("balance", mg.b.comp.balance);
+    js.setInt("earnings", mg.b.comp.earnings);
+    js.setBoolean("sgood", mg.notepad.SALMON_GOOD);
+    js.setBoolean("mgood", mg.notepad.MACK_GOOD);
+    js.setBoolean("sqgood", mg.notepad.SQUID_GOOD);
+    js.setBoolean("havenews", mg.notepad.HAVE_NEWSPAPER);
+    js.setInt("nsal", mg.notepad.sal);
+    js.setInt("nmac", mg.notepad.mac);
+    js.setInt("nsqu", mg.notepad.squ);
+    js.setBoolean("auctionwin", mg.auction.WIN);
+    js.setInt("marketsalp", mg.market.SALMON_PRICE);
+    js.setInt("marketmacp", mg.market.MACKEREL_PRICE);
+    js.setInt("marketsqup", mg.market.SQUID_PRICE);
+     
+    saveJSONObject(js, "data/save1.json");
+    println("saved game"); 
   }
 }
 //-------------------------------------------------------------------------------------------------//

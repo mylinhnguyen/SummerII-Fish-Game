@@ -70,7 +70,7 @@ class Boss extends Person{
   Float happiness;
   Company comp;
   int AFTER_NUM, reqSal, reqMack, reqSquid;
-  Boss(String n) {
+  Boss() {
     name = "Boss";
     happiness = 70.0;
     img = loadImage("newboss.jpg");
@@ -81,7 +81,7 @@ class Boss extends Person{
     DAY_NUM = 12;
     AFTER_NUM = 21;
     LEAVE = false;
-    comp = new Company(n);
+    comp = new Company();
     fixTransparency();
     reqSal = int(random(0,4));
     reqMack = int(random(0,4));

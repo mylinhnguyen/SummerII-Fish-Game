@@ -1,4 +1,3 @@
-//add something to show boss happiness
 MarketGame mg;
 
 void setup() {
@@ -22,7 +21,7 @@ class MarketGame {
   StringList combos, locations;
   StringDict textStrings;
   PFont regular, regular_italic, regular_bold, bornaddict;
-  PImage bg, bg1, bg2, bg3, bg4, bg5, bg6;
+  PImage bg, bg1, bg2, bg6;
   boolean MORN_TALK, GAMESTART, ALLOW_INPUTS, COUNTED, INTRO, RECEIVED_EARNINGS, AT_TUNA_MARKET, AT_FISH_MARKET, SHOW_BUYER, NEW_DAY_ANIM, STORE_CLOSE, MENU_OPEN;
   User user;
   Boss b;
@@ -52,12 +51,9 @@ class MarketGame {
     bg = loadImage("newbackground.jpg");
     bg1 = loadImage("background1.jpg");
     bg2 = loadImage("background2.jpg");
-    bg3 = loadImage("background3.jpg");
-    //bg4 = loadImage("background4.jpg");
-    bg5 = loadImage("background5.jpg");
     bg6 = loadImage("background6.jpg");
     user = new User();
-    b = new Boss("Soosh-E");
+    b = new Boss();
     start = new Button("Start", new PVector(width/7, height*.5), 150, 70, 0);
     info = new Button("Info", new PVector(width/10, height*.6), 180, 180, 180);
     exit = new Button("Exit", new PVector(width/7, height*.7), 0, 150, 0);
@@ -154,7 +150,7 @@ class MarketGame {
     exit.draw();
   }
   private void SettingScreen() {
-    background(bg5);
+    background(240);
     //will probably add story here too - what your goal is - sound if/when I add music
   }
   private void BossScreen() {
@@ -176,7 +172,7 @@ class MarketGame {
     notepad.display();
     if(auction.WIN) drawWinText();
     if(AT_TUNA_MARKET) {
-      background(bg3);
+      background(bg6);
       notepad.display();
       textFont(regular);
       for(int i = 0; i < tunas.length; i++) 
@@ -213,7 +209,7 @@ class MarketGame {
   }
   private void ANewDayScreen() {
     //moon going down and sun coming up animation  
-    background(bg3);
+    background(10);
     openStore();
     CURRENT_SCREEN = 2;
   }
@@ -348,14 +344,11 @@ class MarketGame {
   void mouseInput() {
     if(MENU_OPEN) {
       if(gm.load.mouseOver()) {
-        println("load");
         gm.LOAD = true;
         gm.SAVE = false;
       }
       else if(gm.save.mouseOver()) {
-        println("save");
-        gm.LOAD = false;
-        gm.SAVE = true;
+        gm.saveGame();
       }
     }
     if(CURRENT_SCREEN == 0) {

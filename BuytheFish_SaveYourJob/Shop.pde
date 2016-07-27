@@ -10,18 +10,22 @@ class Auction{
     WIN = WRONG_INPUT = false;
     buyer = new Buyer();
     door = loadImage("steeldoor.jpg");
-    framel = loadImage("darkconcrete.jpg");
-    framew = loadImage("darkconcrete.jpg");
-    framel.resize(10, 270);
-    framew.resize(300, 10);
+    //framel = loadImage("darkconcrete.jpg");
+    //framew = loadImage("darkconcrete.jpg");
+    //framel.resize(10, 270);
+    //framew.resize(300, 10);
     a_note = loadImage("auctionNote.jpg");
   }
   void displayIcon() {
     noStroke();
     image(door, 800, 50);
-    image(framel, 800, 50);
-    image(framel, 1100, 50);
-    image(framew, 800, 50);
+    fill(40);
+    rect(800, 50, 10, 270);
+    rect(1100, 50, 10, 270);
+    rect(800, 50, 300, 10);
+    //image(framel, 800, 50);
+    //image(framel, 1100, 50);
+    //image(framew, 800, 50);
     fill(240);
     rect(700, 100, 80, 60, 4);
     textSize(20);
@@ -294,9 +298,10 @@ class Notes{
     newspaper = new Newspaper();
     note = loadImage("notepad.jpg");
     loc = new PVector(width/2, height/2);
-    HAVE_NEWSPAPER = OPEN_UP = false;
+    SALMON_GOOD = MACK_GOOD = SQUID_GOOD = HAVE_NEWSPAPER = OPEN_UP = false;
   }
   void display() {
+    //need to add strikethrough if bought correct number of fish using boolean salmon good etc
     noStroke();
     if(OPEN_UP) {
       fill(10, 150);
@@ -383,8 +388,8 @@ class Company{
   int balance, earnings;
   float TUNA_AMOUNT, TUNA_QUALITY;
   
-  Company(String n) {
-    name = n; 
+  Company() {
+    name = "Soosh-E"; 
     balance = 0;
     TUNA_AMOUNT = TUNA_QUALITY = 0;
     earnings = 5000;
