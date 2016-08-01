@@ -25,6 +25,7 @@ class GameMenu {
     rectMode(CORNER);
     fill(10,150);
     rect(0, 0, width, height);
+    textFont(mg.regular);
     if(!LOAD && !SAVE) {
       fill(10);
       rect(450, 225, 300, 250);

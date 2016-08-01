@@ -1,18 +1,62 @@
+import ddf.minim.*;
+import ddf.minim.analysis.*;
+import ddf.minim.effects.*;
+import ddf.minim.signals.*;
+import ddf.minim.spi.*;
+import ddf.minim.ugens.*;
+
 MarketGame mg;
+Minim minim, m2, m3;
+AudioPlayer player, p2, p3;
 
 void setup() {
   size(1200,800);
   frameRate(30);
   mg = new MarketGame();
+  minim = new Minim(this);
+  m2 = new Minim(this);
+  m3 = new Minim(this);
+  player = minim.loadFile("calmness.mp3");
+  p2 = m2.loadFile("100840__lonemonk__approx-5000-crowd-noise.wav");
+  p3 = m3.loadFile("5s-to-50.mp3");
+  player.play();
 }
 void draw() {
   mg.play();
+  audio();
 }
 void keyPressed() {
   mg.inputKey();
 }
 void mouseClicked() {
   mg.mouseInput();
+}
+void audio() {
+  if(mg.CURRENT_SCREEN == 4) {
+    if(!mg.GAMESTART) {
+      if(player.isPlaying()) player.pause(); 
+      if(p3.isPlaying()) p3.pause();
+      p2.play();
+    }
+    else if(mg.GAMESTART){
+      if(p2.isPlaying()) p2.pause();
+      p3.play();
+      if(!p3.isPlaying()) {
+        p3.rewind();
+        p3.play();
+      }
+    }
+  }
+  else if(mg.CURRENT_SCREEN == 3 && mg.MORN_TALK) {
+    if(p2.isPlaying()) p2.pause();
+    if(p3.isPlaying()) p3.pause();
+    player.play();
+  }
+  else if(mg.CURRENT_SCREEN == 2) {
+    player.rewind();
+    p2.rewind();
+    p3.rewind();
+  }
 }
 //-------------------------------------------------------------------------------------------------//
 //↑ ↓ → ←
