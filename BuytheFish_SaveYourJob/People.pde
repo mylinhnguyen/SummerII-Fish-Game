@@ -70,6 +70,7 @@ class Boss extends Person{
   Float happiness;
   Company comp;
   int AFTER_NUM, reqSal, reqMack, reqSquid;
+  boolean GOT_LOAN;
   Boss() {
     name = "Boss";
     happiness = 70.0;
@@ -86,6 +87,12 @@ class Boss extends Person{
     reqSal = int(random(0,4));
     reqMack = int(random(0,4));
     reqSquid = int(random(0,4));
+    GOT_LOAN = false;
+  }
+  void getLoan() {
+    comp.balance+=3000;
+    happiness-=10.0;
+    GOT_LOAN = true;
   }
   void displayHappy() {
     stroke(10);
@@ -167,6 +174,7 @@ class Boss extends Person{
     reqSal = int(random(0,4));
     reqMack = int(random(0,4));
     reqSquid = int(random(0,4));
+    GOT_LOAN = false;
   }
 }
 //-------------------------------------------------------------------------------------------------//

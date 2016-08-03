@@ -293,12 +293,14 @@ class Notes{
   boolean HAVE_NEWSPAPER, OPEN_UP, SALMON_GOOD, MACK_GOOD, SQUID_GOOD;
   int sal, mac, squ;
   String newsLoc;
+  Button loan;
   Notes() {
     //800,600
     newspaper = new Newspaper();
     note = loadImage("notepad.jpg");
     loc = new PVector(width/2, height/2);
     SALMON_GOOD = MACK_GOOD = SQUID_GOOD = HAVE_NEWSPAPER = OPEN_UP = false;
+    loan = new Button("Loan", new PVector(650, 450), 100, 200, 100);
   }
   void display() {
     //need to add strikethrough if bought correct number of fish using boolean salmon good etc
@@ -316,6 +318,9 @@ class Notes{
       text("Buy " + sal + " salmon", 650, 250);
       text("Buy " + mac + " mackerel", 650, 300);
       text("Buy " + squ + " squid", 650, 350);
+      
+      text("Run out of money?", 650, 400);
+      loan.draw();
     }
     else {
       //need to make icon

@@ -153,15 +153,18 @@ class GameMenu {
 //Would you press the button
 class Button{
   String text;
-  PVector location;
+  PVector location, origin;
   color col,over;
   PFont pf;
+  float speed;
   Button(String t, PVector l, int r, int g, int b) {
     text = t;
     location = l;
+    origin = location.copy();
     col = color(r, g, b);
     over = color(r+100, g+100, b+100);
     pf = createFont("BornAddict.ttf", 25);
+    speed = random(0,.8);
   }
   void draw() {
     if(mouseOver())
@@ -192,6 +195,11 @@ class Button{
     fill(250);
     textFont(pf);
     text(text, location.x+65, location.y+8);
+  }
+  void move() {
+    location.x+=speed;
+    println(location.x + " " + origin.x);
+    if(location.x >= origin.x + 20 || location.x <= origin.x - 20) speed*=-1;
   }
   boolean mouseOver() {
     if(mouseX >= location.x && mouseX <= location.x + 100 

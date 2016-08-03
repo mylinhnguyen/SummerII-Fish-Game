@@ -37,6 +37,10 @@ void audio() {
       if(player.isPlaying()) player.pause(); 
       if(p3.isPlaying()) p3.pause();
       p2.play();
+      if(!p2.isPlaying()) {
+         p2.rewind();
+         p2.play();
+      }
     }
     else if(mg.GAMESTART){
       if(p2.isPlaying()) p2.pause();
@@ -65,7 +69,7 @@ class MarketGame {
   StringList combos, locations;
   StringDict textStrings;
   PFont regular, regular_italic, regular_bold, bornaddict;
-  PImage bg, bg1, bg2, bg6;
+  PImage bg, bg1, bg2, bg3, bg6, crowd;
   boolean MORN_TALK, GAMESTART, ALLOW_INPUTS, COUNTED, INTRO, RECEIVED_EARNINGS, AT_TUNA_MARKET, AT_FISH_MARKET, SHOW_BUYER, NEW_DAY_ANIM, STORE_CLOSE, MENU_OPEN;
   User user;
   Boss b;
@@ -95,7 +99,9 @@ class MarketGame {
     bg = loadImage("newbackground.jpg");
     bg1 = loadImage("background1.jpg");
     bg2 = loadImage("background2.jpg");
+    bg3 = loadImage("background3.jpg");
     bg6 = loadImage("background6.jpg");
+    crowd = loadImage("crowdonly.png");
     user = new User();
     b = new Boss();
     start = new Button("Start", new PVector(width/7, height*.5), 150, 70, 0);
@@ -192,10 +198,12 @@ class MarketGame {
     start.draw();
     info.draw();
     exit.draw();
+    start.move();
+    info.move();
+    exit.move();
   }
   private void SettingScreen() {
-    background(240);
-    //will probably add story here too - what your goal is - sound if/when I add music
+    background(bg3);
   }
   private void BossScreen() {
     background(bg2);
@@ -213,6 +221,7 @@ class MarketGame {
     auction.displayIcon();
     market.displayIcon();
     notepad.newspaper.displayIcon();
+    image(crowd, 0, 0);
     notepad.display();
     if(auction.WIN) drawWinText();
     if(AT_TUNA_MARKET) {
@@ -264,6 +273,9 @@ class MarketGame {
     if(keyCode == 77 || keyCode == 109) {
       if(!MENU_OPEN) MENU_OPEN = true;
       else MENU_OPEN = false; 
+    }
+    if(CURRENT_SCREEN == 1 && keyCode == 8) {
+      CURRENT_SCREEN = 0;
     }
     //Input keys for Boss Screen
     if(CURRENT_SCREEN == 3 && keyCode == 32) {
@@ -415,6 +427,9 @@ class MarketGame {
         }
         else if(AT_FISH_MARKET) {
           market.addFish(); 
+        }
+        else if(notepad.loan.mouseOver() && !b.GOT_LOAN) {
+          b.getLoan(); 
         }
       }
       else if(AT_TUNA_MARKET && !SHOW_BUYER) {
