@@ -40,6 +40,7 @@ void audio() {
       if(!p2.isPlaying()) {
          p2.rewind();
          p2.play();
+         p2.loop();
       }
     }
     else if(mg.GAMESTART){
@@ -48,6 +49,7 @@ void audio() {
       if(!p3.isPlaying()) {
         p3.rewind();
         p3.play();
+        p3.loop();
       }
     }
   }
@@ -55,6 +57,7 @@ void audio() {
     if(p2.isPlaying()) p2.pause();
     if(p3.isPlaying()) p3.pause();
     player.play();
+    player.loop();
   }
   else if(mg.CURRENT_SCREEN == 2) {
     player.rewind();
@@ -70,7 +73,7 @@ class MarketGame {
   StringDict textStrings;
   PFont regular, regular_italic, regular_bold, bornaddict;
   PImage bg, bg1, bg2, bg3, bg6, crowd;
-  boolean MORN_TALK, GAMESTART, ALLOW_INPUTS, COUNTED, INTRO, RECEIVED_EARNINGS, AT_TUNA_MARKET, AT_FISH_MARKET, SHOW_BUYER, NEW_DAY_ANIM, STORE_CLOSE, MENU_OPEN;
+  boolean MORN_TALK, GAMESTART, ALLOW_INPUTS, COUNTED, INTRO, RECEIVED_EARNINGS, AT_TUNA_MARKET, AT_FISH_MARKET, SHOW_BUYER, NEW_DAY_ANIM, STORE_CLOSE, MENU_OPEN, NO_TUNA, FIRE;
   User user;
   Boss b;
   Button start, info, exit;
@@ -88,7 +91,7 @@ class MarketGame {
     locations = new StringList();
     addLocations();
     addCombos();
-    MENU_OPEN = STORE_CLOSE = NEW_DAY_ANIM = SHOW_BUYER = AT_FISH_MARKET = AT_TUNA_MARKET = RECEIVED_EARNINGS = MORN_TALK = GAMESTART = ALLOW_INPUTS = COUNTED = false;
+    FIRE = NO_TUNA = MENU_OPEN = STORE_CLOSE = NEW_DAY_ANIM = SHOW_BUYER = AT_FISH_MARKET = AT_TUNA_MARKET = RECEIVED_EARNINGS = MORN_TALK = GAMESTART = ALLOW_INPUTS = COUNTED = false;
     INTRO = true;
     textStrings = new StringDict();
     addStrings();
@@ -116,7 +119,7 @@ class MarketGame {
     int y = 250;
     for(int i = 0; i < tunas.length; i++) {
       tunas[i] = new Tuna(new PVector(x, y), locations.get(int(random(0,locations.size()-1)))); 
-      println(tunas[i].print());
+      //println(tunas[i].print());
       x+=250;
       if(i == 3 || i == 7) {
         x = 100;
@@ -149,6 +152,7 @@ class MarketGame {
     textStrings.set("Boss19", "\"This is top quality! I'm sure this will sale for a lot.\"");
     textStrings.set("Boss20", "\"Tomorrow we'll see how well your fish sales.\"");
     textStrings.set("Boss21","\"See you tomorrow.\"");
+    textStrings.set("Bossfire", "\"You're fired.\"");
     textStrings.set("Give", "Handed fish over.");
     textStrings.set("Buyer1", "\"Haven't seen you around before. Are you new?\"");
     textStrings.set("Buyer2", "\"I'm not worried about some newbie. Good luck trying to beat me in the auction.\"");
@@ -188,6 +192,8 @@ class MarketGame {
       MarketScreen();
     else if(CURRENT_SCREEN == 5) 
       ANewDayScreen();
+    else if(CURRENT_SCREEN == 6)
+      GameOverScreen();
     else {
       println("ERROR LOADING SCREEN");
       exit();
@@ -201,6 +207,14 @@ class MarketGame {
     start.move();
     info.move();
     exit.move();
+  }
+  private void GameOverScreen() {
+    background(10);
+    fill(240);
+    textSize(90);
+    textAlign(CENTER);
+    text("Game Over", width/2, height/2);
+    displayText();
   }
   private void SettingScreen() {
     background(bg3);
@@ -315,6 +329,10 @@ class MarketGame {
           }
           else TEXTSTRING++;
         }
+        else if(TEXTSTRING == b.DIALOGUE_NUM && b.happiness < 40) {
+          FIRE = true;
+          CURRENT_SCREEN = 6; 
+        }
         else b.LEAVE = true;
       }
     }
@@ -338,6 +356,9 @@ class MarketGame {
          }
          else SHOW_BUYER = false;
        }
+       else if(AT_TUNA_MARKET && !GAMESTART && !SHOW_BUYER && keyCode == 8) {
+         AT_TUNA_MARKET = false; 
+       }
        else if(GAMESTART && ALLOW_INPUTS) {
          if(keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) 
            user.userInput.append(keyCode); 
@@ -349,6 +370,7 @@ class MarketGame {
              GAMESTART = false;
              tunas[user.SELECTED_TUNA].LOOK_AT = true;
              auction.totalReset();
+             checkTunas();
            }
          }
          //User inputs second digit
@@ -360,6 +382,7 @@ class MarketGame {
              GAMESTART = false;
              tunas[user.SELECTED_TUNA].LOOK_AT = true;
              auction.totalReset();
+             checkTunas();
            }
            auction.miniReset();
            auction.buyerBid(tunas[user.SELECTED_TUNA].quality);
@@ -371,6 +394,7 @@ class MarketGame {
                tunas[user.SELECTED_TUNA].LOOK_AT = true;
                auction.totalReset();
                auction.WIN = false;
+               checkTunas();
              }
              else {
                b.comp.buy(auction.YOUR_BID);
@@ -381,7 +405,7 @@ class MarketGame {
            ALLOW_INPUTS = true;
          }
        }
-       else if(auction.WIN && keyCode == 32) {
+       else if((auction.WIN || NO_TUNA) && keyCode == 32) {
          TEXTSTRING = b.DAY_NUM + 1;
          b.comp.restock(tunas[user.SELECTED_TUNA]);
          b.otherFishHappy(user.salNum, user.mackNum, user.squidNum);
@@ -394,6 +418,9 @@ class MarketGame {
       //reset MarketGame stuff here
       nextDay();
       CURRENT_SCREEN = 3;
+    }
+    if(CURRENT_SCREEN == 6 && keyCode == 10) {
+       exit();
     }
   }
   //mouseClicked
@@ -417,7 +444,7 @@ class MarketGame {
     }
     if(CURRENT_SCREEN == 4 && !MENU_OPEN) {
       if(!AT_TUNA_MARKET) {
-        if(auction.mouseOver() && !auction.WIN)
+        if(auction.mouseOver() && !auction.WIN && !NO_TUNA)
           SHOW_BUYER = AT_TUNA_MARKET = true;
         else if(market.mouseOver() && !AT_FISH_MARKET) {
           AT_FISH_MARKET = true;
@@ -445,21 +472,33 @@ class MarketGame {
   }
   private void displayText() {
     fill(10);
-    if(CURRENT_SCREEN == 3) {
-      if(TEXTSTRING == b.INTRO_NUM || TEXTSTRING == b.DAY_NUM || TEXTSTRING == 15) {
-        textFont(regular_bold);
-        if(TEXTSTRING == 15) text(textStrings.get("Boss" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
-        else  text(textStrings.get("Boss" + TEXTSTRING) + b.comp.earnings + " yen", 50, height*.8, width - 50, height*.2);
+      if(CURRENT_SCREEN == 3) {
+        if(TEXTSTRING == b.INTRO_NUM || TEXTSTRING == b.DAY_NUM || TEXTSTRING == 15) {
+          textFont(regular_bold);
+          if(TEXTSTRING == 15) text(textStrings.get("Boss" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
+          else  text(textStrings.get("Boss" + TEXTSTRING) + b.comp.earnings + " yen", 50, height*.8, width - 50, height*.2);
+        }
+        else {
+          textFont(regular);
+          text("Boss: " + textStrings.get("Boss" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
+        }
       }
-      else {
+      else if(CURRENT_SCREEN == 4 && !GAMESTART && !ALLOW_INPUTS && SHOW_BUYER){
         textFont(regular);
-        text("Boss: " + textStrings.get("Boss" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
+        text(auction.buyer.name + ": " + textStrings.get("Buyer" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
       }
-    }
-    else if(CURRENT_SCREEN == 4 && !GAMESTART && !ALLOW_INPUTS && SHOW_BUYER){
       textFont(regular);
-      text(auction.buyer.name + ": " + textStrings.get("Buyer" + TEXTSTRING), 50, height*.8, width - 50, height*.2);
+      fill(240);
+      textAlign(CENTER);
+      text(textStrings.get("Bossfire"), width/2, 500);
+  }
+  private void checkTunas() {
+    int a = 0;
+    for(Tuna t: tunas) {
+      if(t.LOOK_AT) a++; 
+      println(a + " " + tunas.length);
     }
+    if(a == tunas.length) NO_TUNA = true;
   }
   void openStore() {
     CUSTOMER_COUNT = 0;
@@ -516,6 +555,9 @@ class MarketGame {
     textSize(40);
     fill(240, millis() % 1020);
     text("Loading...", width*.8, height*.95);
+  }
+  private void gameover() {
+     
   }
   private void nextDay() {
     DAY++;

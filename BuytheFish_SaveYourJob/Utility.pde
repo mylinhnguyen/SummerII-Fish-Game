@@ -198,7 +198,6 @@ class Button{
   }
   void move() {
     location.x+=speed;
-    println(location.x + " " + origin.x);
     if(location.x >= origin.x + 20 || location.x <= origin.x - 20) speed*=-1;
   }
   boolean mouseOver() {

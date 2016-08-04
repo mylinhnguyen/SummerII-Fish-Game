@@ -89,6 +89,9 @@ class Boss extends Person{
     reqSquid = int(random(0,4));
     GOT_LOAN = false;
   }
+  void receiveNoTuna() {
+    happiness-=15;
+  }
   void getLoan() {
     comp.balance+=3000;
     happiness-=10.0;
